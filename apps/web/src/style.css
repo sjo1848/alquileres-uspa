@@ -1,0 +1,8 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #f5f3ee; color: #1f2933; }
+.shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.card { width: min(720px, 100%); background: white; border: 1px solid #ddd7ca; border-radius: 20px; padding: 40px; box-shadow: 0 18px 50px rgba(31, 41, 51, 0.08); }
+.eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: .78rem; font-weight: 700; color: #667085; }
+h1 { margin: .25rem 0 1rem; font-size: clamp(2rem, 7vw, 4rem); line-height: .95; }
+.lead { font-size: 1.1rem; line-height: 1.6; color: #475467; }
+ul { margin: 2rem 0 0; padding-left: 1.2rem; line-height: 1.9; }
