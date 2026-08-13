@@ -2,7 +2,7 @@
   "name": "alquileres-uspa",
   "private": true,
   "version": "0.1.0",
-  "packageManager": "pnpm@10.15.1",
+  "packageManager": "pnpm@11.21.0",
   "engines": {
     "node": ">=22"
   },
