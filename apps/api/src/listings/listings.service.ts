@@ -6,7 +6,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { ListingStatus, Prisma } from '@prisma/client';
+import {
+  ListingPublicationStatus,
+  ListingStatus,
+  Prisma,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   LISTING_IMAGE_STORAGE,
@@ -25,7 +29,7 @@ export class ListingsService {
 
   listMine(ownerId: string) {
     return this.prisma.listing.findMany({
-      where: { ownerId, status: ListingStatus.DRAFT },
+      where: { ownerId },
       orderBy: { updatedAt: 'desc' },
     });
   }
@@ -38,10 +42,124 @@ export class ListingsService {
 
   async getMine(ownerId: string, id: string) {
     const listing = await this.prisma.listing.findFirst({
-      where: { id, ownerId, status: ListingStatus.DRAFT },
+      where: { id, ownerId },
     });
     if (!listing) throw new NotFoundException('Listing not found');
     return listing;
+  }
+
+  async submit(ownerId: string, id: string) {
+    return this.withListingLock(id, async (db) => {
+      const listing = await db.listing.findFirst({
+        where: { id, ownerId },
+        select: { status: true },
+      });
+      if (!listing) throw new NotFoundException('Listing not found');
+      if (listing.status === ListingStatus.SUBMITTED)
+        return db.listing.findUnique({ where: { id } });
+      if (
+        listing.status !== ListingStatus.DRAFT &&
+        listing.status !== ListingStatus.REJECTED
+      )
+        throw new ConflictException(
+          'Listing cannot be submitted in its current status',
+        );
+      const result = await db.listing.updateMany({
+        where: { id, ownerId, status: listing.status },
+        data: { status: ListingStatus.SUBMITTED, rejectionReason: null },
+      });
+      if (result.count !== 1)
+        throw new ConflictException('Listing changed during submission');
+      return db.listing.findUnique({ where: { id } });
+    });
+  }
+
+  listForReview() {
+    return this.prisma.listing.findMany({
+      where: { status: ListingStatus.SUBMITTED },
+      orderBy: { updatedAt: 'asc' },
+    });
+  }
+
+  async approve(id: string) {
+    return this.withListingLock(id, async (db) => {
+      const listing = await db.listing.findUnique({
+        where: { id },
+        select: { status: true },
+      });
+      if (!listing) throw new NotFoundException('Listing not found');
+      if (listing.status === ListingStatus.APPROVED)
+        return db.listing.findUnique({ where: { id } });
+      if (listing.status !== ListingStatus.SUBMITTED)
+        throw new ConflictException('Listing is not awaiting review');
+      const result = await db.listing.updateMany({
+        where: { id, status: ListingStatus.SUBMITTED },
+        data: { status: ListingStatus.APPROVED, rejectionReason: null },
+      });
+      if (!result.count)
+        throw new ConflictException('Listing is not awaiting review');
+      return db.listing.findUnique({ where: { id } });
+    });
+  }
+
+  async publish(id: string) {
+    return this.withListingLock(id, async (db) => {
+      const listing = await db.listing.findUnique({
+        where: { id },
+        select: { status: true, publicationStatus: true },
+      });
+      if (!listing) throw new NotFoundException('Listing not found');
+      if (listing.publicationStatus === ListingPublicationStatus.PUBLISHED)
+        return db.listing.findUnique({ where: { id } });
+      if (
+        listing.status !== ListingStatus.APPROVED ||
+        listing.publicationStatus !== ListingPublicationStatus.UNPUBLISHED
+      )
+        throw new ConflictException(
+          'Only an approved unpublished listing can be published',
+        );
+      const result = await db.listing.updateMany({
+        where: {
+          id,
+          status: ListingStatus.APPROVED,
+          publicationStatus: ListingPublicationStatus.UNPUBLISHED,
+        },
+        data: { publicationStatus: ListingPublicationStatus.PUBLISHED },
+      });
+      if (!result.count)
+        throw new ConflictException(
+          'Only an approved unpublished listing can be published',
+        );
+      return db.listing.findUnique({ where: { id } });
+    });
+  }
+
+  async reject(id: string, reason: string) {
+    if (typeof reason !== 'string' || reason.trim().length === 0)
+      throw new BadRequestException('Rejection reason cannot be blank');
+    return this.withListingLock(id, async (db) => {
+      const listing = await db.listing.findUnique({
+        where: { id },
+        select: { status: true, rejectionReason: true },
+      });
+      if (!listing) throw new NotFoundException('Listing not found');
+      if (listing.status === ListingStatus.REJECTED) {
+        if (listing.rejectionReason === reason)
+          return db.listing.findUnique({ where: { id } });
+        throw new ConflictException(
+          'Listing already rejected with another reason',
+        );
+      }
+      if (listing.status !== ListingStatus.SUBMITTED)
+        throw new ConflictException('Listing is not awaiting review');
+      const result = await db.listing.updateMany({
+        where: { id, status: ListingStatus.SUBMITTED },
+        data: { status: ListingStatus.REJECTED, rejectionReason: reason },
+      });
+      if (!result.count)
+        throw new ConflictException('Listing is not awaiting review');
+      return db.listing.findUnique({ where: { id } });
+    });
   }
 
   async update(ownerId: string, id: string, input: UpdateListingDto) {

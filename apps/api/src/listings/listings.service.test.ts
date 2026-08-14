@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ListingsService } from './listings.service.js';
 
@@ -12,6 +12,7 @@ describe('ListingsService ownership', () => {
       updateMany: vi.fn(),
       delete: vi.fn(),
       deleteMany: vi.fn(),
+      findUnique: vi.fn(),
     },
     listingImage: { findMany: vi.fn() },
     $transaction: vi.fn(),
@@ -28,22 +29,22 @@ describe('ListingsService ownership', () => {
     prisma.$queryRaw.mockResolvedValue(undefined);
   });
 
-  it('lists only the authenticated owner drafts', async () => {
+  it('lists only the authenticated owner listings', async () => {
     await service.listMine('owner-a');
     expect((prisma as any).listing.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { ownerId: 'owner-a', status: 'DRAFT' },
+        where: { ownerId: 'owner-a' },
       }),
     );
   });
 
-  it('queries only the authenticated owner draft and translates a miss', async () => {
+  it('queries only the authenticated owner listing and translates a miss', async () => {
     (prisma as any).listing.findFirst.mockResolvedValue(null);
     await expect(service.getMine('owner-a', 'l1')).rejects.toBeInstanceOf(
       NotFoundException,
     );
     expect((prisma as any).listing.findFirst).toHaveBeenCalledWith({
-      where: { id: 'l1', ownerId: 'owner-a', status: 'DRAFT' },
+      where: { id: 'l1', ownerId: 'owner-a' },
     });
   });
 
@@ -158,6 +159,85 @@ describe('ListingsService ownership', () => {
       expect.objectContaining({
         data: expect.objectContaining({ ownerId: 'owner-a', status: 'DRAFT' }),
       }),
+    );
+  });
+
+  it('submits only the authenticated owner draft or rejected listing', async () => {
+    (prisma as any).listing.findFirst.mockResolvedValue({ status: 'REJECTED' });
+    (prisma as any).listing.updateMany.mockResolvedValue({ count: 1 });
+    await service.submit('owner-a', 'l1');
+    expect((prisma as any).listing.updateMany).toHaveBeenCalledWith({
+      where: { id: 'l1', ownerId: 'owner-a', status: 'REJECTED' },
+      data: { status: 'SUBMITTED', rejectionReason: null },
+    });
+  });
+
+  it('rejects publishing until an admin-approved listing is selected atomically', async () => {
+    (prisma as any).listing.findUnique.mockResolvedValue({
+      status: 'APPROVED',
+      publicationStatus: 'UNPUBLISHED',
+    });
+    (prisma as any).listing.updateMany.mockResolvedValue({ count: 0 });
+    await expect(service.publish('l1')).rejects.toThrow('approved unpublished');
+    expect((prisma as any).listing.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: 'l1',
+          status: 'APPROVED',
+          publicationStatus: 'UNPUBLISHED',
+        },
+      }),
+    );
+  });
+
+  it('requires a submitted listing for admin rejection', async () => {
+    (prisma as any).listing.findUnique.mockResolvedValue({
+      status: 'APPROVED',
+      rejectionReason: null,
+    });
+    (prisma as any).listing.updateMany.mockResolvedValue({ count: 0 });
+    await expect(service.reject('l1', 'Falta información')).rejects.toThrow(
+      'awaiting review',
+    );
+  });
+
+  it('returns submitted listing unchanged when submit is repeated', async () => {
+    (prisma as any).listing.findFirst.mockResolvedValue({
+      status: 'SUBMITTED',
+    });
+    const current = { id: 'l1', status: 'SUBMITTED' };
+    (prisma as any).listing.findUnique.mockResolvedValue(current);
+    await expect(service.submit('owner-a', 'l1')).resolves.toBe(current);
+    expect((prisma as any).listing.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('makes approve, publish, and same-reason reject idempotent', async () => {
+    const current = { id: 'l1' };
+    (prisma as any).listing.findUnique
+      .mockResolvedValueOnce({ status: 'APPROVED' })
+      .mockResolvedValueOnce(current)
+      .mockResolvedValueOnce({
+        status: 'APPROVED',
+        publicationStatus: 'PUBLISHED',
+      })
+      .mockResolvedValueOnce(current)
+      .mockResolvedValueOnce({
+        status: 'REJECTED',
+        rejectionReason: 'Falta información',
+      })
+      .mockResolvedValue(current);
+    (prisma as any).listing.updateMany.mockResolvedValue({ count: 0 });
+    await expect(service.approve('l1')).resolves.toBe(current);
+    await expect(service.publish('l1')).resolves.toBe(current);
+    await expect(service.reject('l1', 'Falta información')).resolves.toBe(
+      current,
+    );
+    expect((prisma as any).listing.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects a whitespace-only rejection reason', async () => {
+    await expect(service.reject('l1', '   \n\t')).rejects.toBeInstanceOf(
+      BadRequestException,
     );
   });
 });

@@ -51,6 +51,13 @@ export class ListingsController {
     await this.listings.remove(req.user!.id, id);
   }
 
+  @Post(':id/submit') submit(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    return this.listings.submit(req.user!.id, id);
+  }
+
   @Get(':id/images') listImages(
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,

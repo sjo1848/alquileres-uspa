@@ -14,6 +14,14 @@ enum Role {
 
 enum ListingStatus {
   DRAFT
+  SUBMITTED
+  REJECTED
+  APPROVED
+}
+
+enum ListingPublicationStatus {
+  UNPUBLISHED
+  PUBLISHED
 }
 
 model User {
@@ -38,6 +46,8 @@ model Listing {
   pricePerNight  Int           @map("price_per_night")
   maxGuests      Int           @map("max_guests")
   status         ListingStatus @default(DRAFT)
+  publicationStatus ListingPublicationStatus @default(UNPUBLISHED) @map("publication_status")
+  rejectionReason String?       @map("rejection_reason")
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
   images         ListingImage[]
