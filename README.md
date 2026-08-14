@@ -1,33 +1,34 @@
 # Alquileres Uspallata
 
-I03 listing images on branch `i03-listing-images`.
+I04 admin review and publication on branch `i04-admin-review-publication`.
 
-This increment adds authenticated OWNER-only image management for their own `DRAFT` Listings: validation, ordering, deletion, cleanup/compensation, and a replaceable storage abstraction. Listing CRUD from I02 remains available. Ownership is derived server-side from the bearer token; clients cannot choose `ownerId`. I04 and later are explicitly out of scope: publication, moderation, catalog, availability, contact events, assisted admin, audit, deployment, payments, reservations, tourism, and realtime flows.
+This increment adds OWNER listing submission and idempotent ADMIN review and publication. I04 supports re-submit of `DRAFT` and `REJECTED` listings, review through approve/reject, and publication after approval. Repeating a legitimate completed operation returns the current listing without changing it; invalid state transitions remain conflicts. I05 and later are explicitly out of scope.
+
+## States
+
+`status` is the review workflow: `DRAFT` → `SUBMITTED` → `APPROVED` or `REJECTED`. Owners can submit drafts and rejected listings. Admins can approve or reject submitted listings; rejection requires a non-blank reason. A rejected listing stores `rejectionReason`, and re-submit clears it. Repeating reject is idempotent only when the reason is identical; a different reason conflicts.
+
+`publicationStatus` is independent and starts as `UNPUBLISHED`. Only an `APPROVED`/`UNPUBLISHED` listing can be published; repeating publish on `PUBLISHED` is idempotent.
 
 ## Local setup
 
 ```bash
 cp .env.example .env
-pnpm install
+pnpm install --frozen-lockfile
 docker compose up -d postgres
 pnpm prisma:generate
 pnpm --filter @alquileres/api prisma:migrate:dev
 pnpm dev
 ```
 
-The API exposes the foundation auth endpoints plus I02:
+The API exposes the foundation auth endpoints plus I02/I03/I04:
 
-- `POST /auth/login`
-- `GET /auth/me`
-- `GET /auth/admin-check` (foundation-only server-side role enforcement check)
-- `GET /listings` (authenticated OWNER's drafts)
-- `POST /listings` (creates a DRAFT; `ownerId` is ignored/not accepted from input)
-- `GET /listings/:id`, `PATCH /listings/:id`, `DELETE /listings/:id` (own drafts only)
-- `POST /listings/:id/images` (multipart field `image`; own drafts only)
-- `GET /listings/:id/images` (own drafts only)
-- `DELETE /listings/:id/images/:imageId` (own draft image only)
-- `PATCH /listings/:id/images/:imageId` with `{ "position": 0 }` (own draft image only)
+- `POST /auth/login`, `GET /auth/me`, `GET /auth/admin-check`
+- `GET /listings` and `GET /listings/:id` (authenticated owner's listings)
+- `POST /listings`, `PATCH /listings/:id`, `DELETE /listings/:id`
+- `POST /listings/:id/submit` (owner; `DRAFT`/`REJECTED`, or idempotent `SUBMITTED`)
+- `POST /listings/:id/images`, `GET /listings/:id/images`, image delete/reorder (own drafts)
+- `GET /admin/listings/review` (admin; submitted listings)
+- `POST /admin/listings/:id/approve`, `/reject` with `{ "reason": "..." }`, `/publish`
 
-Images are validated as PNG, JPEG, or WebP using MIME and file signatures, with local defaults of 5 MiB per image and 20 images per listing. The local adapter writes bytes under `LISTING_IMAGE_STORAGE_DIR`; PostgreSQL stores only image metadata and a generated object key, so the adapter can be replaced by approved object storage later.
-
-If an image operation requires compensation or cleanup and that follow-up action fails, the failure is recorded in the operation logs and requires later operational recovery. I03 does not add a worker, auditor, or other background recovery mechanism.
+I05+ are excluded: catalog, availability, contact events, assisted admin, audit, deployment, payments, reservations, tourism, realtime flows, and any later increment functionality.

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { ListingsController } from './listings.controller.js';
+import { AdminListingsController } from './admin-listings.controller.js';
 import { ListingsService } from './listings.service.js';
 import {
   LISTING_IMAGE_STORAGE,
@@ -10,7 +11,7 @@ import {
 
 @Module({
   imports: [PrismaModule, AuthModule],
-  controllers: [ListingsController],
+  controllers: [ListingsController, AdminListingsController],
   providers: [
     ListingsService,
     LocalListingImageStorage,
