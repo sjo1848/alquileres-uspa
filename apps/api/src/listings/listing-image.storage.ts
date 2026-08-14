@@ -1,4 +1,4 @@
-import { lstat, mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, open, readFile, unlink } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { Injectable } from '@nestjs/common';
 
@@ -29,12 +29,17 @@ export class LocalListingImageStorage implements ListingImageStorage {
     await this.assertNoSymlinkPath(path);
     await mkdir(dirname(path), { recursive: true });
     await this.assertNoSymlinkPath(path);
+    let file;
     try {
-      await writeFile(path, content, { flag: 'wx' });
+      file = await open(path, 'wx');
+      await file.writeFile(content);
     } catch (error) {
-      // A failed write may have created a partial object; cleanup must not hide it.
-      await this.unlinkRegularFile(path);
+      // Only remove a file after wx opened it successfully. An EEXIST from
+      // open means this operation did not create the pre-existing object.
+      if (file) await this.unlinkRegularFile(path);
       throw error;
+    } finally {
+      await file?.close();
     }
   }
 

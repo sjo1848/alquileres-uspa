@@ -67,4 +67,16 @@ describe('LocalListingImageStorage path safety', () => {
       storage.delete('listings/listing-a/missing.png'),
     ).resolves.toBeUndefined();
   });
+
+  it('preserves an existing object when an exclusive put collides', async () => {
+    const { root, storage } = await makeStorage();
+    const path = join(root, 'listings/listing-a/image.png');
+    await mkdir(join(root, 'listings/listing-a'), { recursive: true });
+    await writeFile(path, 'original');
+
+    await expect(
+      storage.put('listings/listing-a/image.png', Buffer.from('new')),
+    ).rejects.toMatchObject({ code: 'EEXIST' });
+    expect(await readFile(path, 'utf8')).toBe('original');
+  });
 });

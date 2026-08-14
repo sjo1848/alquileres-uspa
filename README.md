@@ -29,3 +29,5 @@ The API exposes the foundation auth endpoints plus I02:
 - `PATCH /listings/:id/images/:imageId` with `{ "position": 0 }` (own draft image only)
 
 Images are validated as PNG, JPEG, or WebP using MIME and file signatures, with local defaults of 5 MiB per image and 20 images per listing. The local adapter writes bytes under `LISTING_IMAGE_STORAGE_DIR`; PostgreSQL stores only image metadata and a generated object key, so the adapter can be replaced by approved object storage later.
+
+If an image operation requires compensation or cleanup and that follow-up action fails, the failure is recorded in the operation logs and requires later operational recovery. I03 does not add a worker, auditor, or other background recovery mechanism.
