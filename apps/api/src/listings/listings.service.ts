@@ -4,6 +4,8 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  ForbiddenException,
+  Optional,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import {
@@ -13,6 +15,8 @@ import {
   Prisma,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { AdminAuditService } from '../audit/admin-audit.service.js';
+import { AuthUser } from '../auth/auth.types.js';
 import {
   LISTING_IMAGE_STORAGE,
   ListingImageStorage,
@@ -48,6 +52,7 @@ export class ListingsService {
     private readonly prisma: PrismaService,
     @Inject(LISTING_IMAGE_STORAGE)
     private readonly imageStorage: ListingImageStorage,
+    @Optional() private readonly audit?: AdminAuditService,
   ) {}
 
   listMine(ownerId: string) {
@@ -182,27 +187,7 @@ export class ListingsService {
 
   async submit(ownerId: string, id: string) {
     return this.withListingLock(id, async (db) => {
-      const listing = await db.listing.findFirst({
-        where: { id, ownerId },
-        select: { status: true },
-      });
-      if (!listing) throw new NotFoundException('Listing not found');
-      if (listing.status === ListingStatus.SUBMITTED)
-        return db.listing.findUnique({ where: { id } });
-      if (
-        listing.status !== ListingStatus.DRAFT &&
-        listing.status !== ListingStatus.REJECTED
-      )
-        throw new ConflictException(
-          'Listing cannot be submitted in its current status',
-        );
-      const result = await db.listing.updateMany({
-        where: { id, ownerId, status: listing.status },
-        data: { status: ListingStatus.SUBMITTED, rejectionReason: null },
-      });
-      if (result.count !== 1)
-        throw new ConflictException('Listing changed during submission');
-      return db.listing.findUnique({ where: { id } });
+      return this.submitOnDb(db, ownerId, id);
     });
   }
 
@@ -213,15 +198,32 @@ export class ListingsService {
     });
   }
 
-  async approve(id: string) {
+  async approve(actor: AuthUser, id: string) {
+    this.assertAdmin(actor);
     return this.withListingLock(id, async (db) => {
       const listing = await db.listing.findUnique({
         where: { id },
-        select: { status: true },
+        select: {
+          status: true,
+          ownerId: true,
+          owner: { select: { role: true } },
+        },
       });
       if (!listing) throw new NotFoundException('Listing not found');
-      if (listing.status === ListingStatus.APPROVED)
-        return db.listing.findUnique({ where: { id } });
+      if (listing.owner.role !== 'OWNER')
+        throw new NotFoundException('Listing not found');
+      if (listing.status === ListingStatus.APPROVED) {
+        const current = await db.listing.findUnique({ where: { id } });
+        await this.auditListing(
+          actor.id,
+          'ADMIN_LISTING_APPROVED',
+          id,
+          current?.ownerId,
+          {},
+          db,
+        );
+        return current;
+      }
       if (listing.status !== ListingStatus.SUBMITTED)
         throw new ConflictException('Listing is not awaiting review');
       const result = await db.listing.updateMany({
@@ -230,19 +232,46 @@ export class ListingsService {
       });
       if (!result.count)
         throw new ConflictException('Listing is not awaiting review');
-      return db.listing.findUnique({ where: { id } });
+      const resultListing = await db.listing.findUnique({ where: { id } });
+      await this.auditListing(
+        actor.id,
+        'ADMIN_LISTING_APPROVED',
+        id,
+        resultListing?.ownerId,
+        {},
+        db,
+      );
+      return resultListing;
     });
   }
 
-  async publish(id: string) {
+  async publish(actor: AuthUser, id: string) {
+    this.assertAdmin(actor);
     return this.withListingLock(id, async (db) => {
       const listing = await db.listing.findUnique({
         where: { id },
-        select: { status: true, publicationStatus: true },
+        select: {
+          status: true,
+          publicationStatus: true,
+          ownerId: true,
+          owner: { select: { role: true } },
+        },
       });
       if (!listing) throw new NotFoundException('Listing not found');
-      if (listing.publicationStatus === ListingPublicationStatus.PUBLISHED)
-        return db.listing.findUnique({ where: { id } });
+      if (listing.owner.role !== 'OWNER')
+        throw new NotFoundException('Listing not found');
+      if (listing.publicationStatus === ListingPublicationStatus.PUBLISHED) {
+        const current = await db.listing.findUnique({ where: { id } });
+        await this.auditListing(
+          actor.id,
+          'ADMIN_LISTING_PUBLISHED',
+          id,
+          current?.ownerId,
+          {},
+          db,
+        );
+        return current;
+      }
       if (
         listing.status !== ListingStatus.APPROVED ||
         listing.publicationStatus !== ListingPublicationStatus.UNPUBLISHED
@@ -262,22 +291,49 @@ export class ListingsService {
         throw new ConflictException(
           'Only an approved unpublished listing can be published',
         );
-      return db.listing.findUnique({ where: { id } });
+      const resultListing = await db.listing.findUnique({ where: { id } });
+      await this.auditListing(
+        actor.id,
+        'ADMIN_LISTING_PUBLISHED',
+        id,
+        resultListing?.ownerId,
+        {},
+        db,
+      );
+      return resultListing;
     });
   }
 
-  async reject(id: string, reason: string) {
+  async reject(actor: AuthUser, id: string, reason: string) {
+    this.assertAdmin(actor);
     if (typeof reason !== 'string' || reason.trim().length === 0)
       throw new BadRequestException('Rejection reason cannot be blank');
     return this.withListingLock(id, async (db) => {
       const listing = await db.listing.findUnique({
         where: { id },
-        select: { status: true, rejectionReason: true },
+        select: {
+          status: true,
+          rejectionReason: true,
+          ownerId: true,
+          owner: { select: { role: true } },
+        },
       });
       if (!listing) throw new NotFoundException('Listing not found');
+      if (listing.owner.role !== 'OWNER')
+        throw new NotFoundException('Listing not found');
       if (listing.status === ListingStatus.REJECTED) {
-        if (listing.rejectionReason === reason)
-          return db.listing.findUnique({ where: { id } });
+        if (listing.rejectionReason === reason) {
+          const current = await db.listing.findUnique({ where: { id } });
+          await this.auditListing(
+            actor.id,
+            'ADMIN_LISTING_REJECTED',
+            id,
+            current?.ownerId,
+            {},
+            db,
+          );
+          return current;
+        }
         throw new ConflictException(
           'Listing already rejected with another reason',
         );
@@ -290,17 +346,205 @@ export class ListingsService {
       });
       if (!result.count)
         throw new ConflictException('Listing is not awaiting review');
-      return db.listing.findUnique({ where: { id } });
+      const resultListing = await db.listing.findUnique({ where: { id } });
+      await this.auditListing(
+        actor.id,
+        'ADMIN_LISTING_REJECTED',
+        id,
+        resultListing?.ownerId,
+        {},
+        db,
+      );
+      return resultListing;
     });
   }
 
   async update(ownerId: string, id: string, input: UpdateListingDto) {
-    const result = await this.prisma.listing.updateMany({
+    return this.updateOnDb(this.prisma, ownerId, id, input);
+  }
+
+  private async updateOnDb(
+    db: PrismaService | Prisma.TransactionClient,
+    ownerId: string,
+    id: string,
+    input: UpdateListingDto,
+  ) {
+    const result = await db.listing.updateMany({
       where: { id, ownerId, status: ListingStatus.DRAFT },
       data: input,
     });
     if (result.count === 0) throw new NotFoundException('Listing not found');
-    return this.getMine(ownerId, id);
+    return db.listing.findUnique({ where: { id } });
+  }
+
+  async createAssisted(
+    actor: AuthUser,
+    ownerId: string,
+    input: CreateListingDto,
+  ) {
+    this.assertAdmin(actor);
+    return this.prisma.$transaction(async (db) => {
+      const owner = await db.user.findFirst({
+        where: { id: ownerId, role: 'OWNER' },
+      });
+      if (!owner) throw new NotFoundException('Owner not found');
+      const listing = await db.listing.create({
+        data: { ...input, ownerId: owner.id, status: ListingStatus.DRAFT },
+      });
+      await this.auditListing(
+        actor.id,
+        'ADMIN_ASSISTED_LISTING_CREATED',
+        listing.id,
+        owner.id,
+        {},
+        db,
+      );
+      return listing;
+    });
+  }
+
+  async updateAssisted(actor: AuthUser, id: string, input: UpdateListingDto) {
+    this.assertAdmin(actor);
+    return this.withListingLock(id, async (db) => {
+      const listing = await this.findAssistedListing(db, id);
+      const result = await this.updateOnDb(db, listing.ownerId, id, input);
+      await this.auditListing(
+        actor.id,
+        'ADMIN_ASSISTED_LISTING_UPDATED',
+        id,
+        listing.ownerId,
+        {},
+        db,
+      );
+      return result;
+    });
+  }
+
+  async updateAvailabilityAssisted(
+    actor: AuthUser,
+    id: string,
+    input: { availabilityStatus: ListingAvailabilityStatus },
+  ) {
+    this.assertAdmin(actor);
+    return this.withListingLock(id, async (db) => {
+      const listing = await this.findAssistedListing(db, id);
+      const result = await this.updateAvailabilityOnDb(
+        db,
+        listing.ownerId,
+        id,
+        input,
+      );
+      await this.auditListing(
+        actor.id,
+        'ADMIN_ASSISTED_AVAILABILITY_UPDATED',
+        id,
+        listing.ownerId,
+        { availabilityStatus: input.availabilityStatus },
+        db,
+      );
+      return result;
+    });
+  }
+
+  async reconfirmAssisted(actor: AuthUser, id: string) {
+    this.assertAdmin(actor);
+    return this.withListingLock(id, async (db) => {
+      const listing = await this.findAssistedListing(db, id);
+      const result = await this.reconfirmOnDb(db, listing.ownerId, id);
+      await this.auditListing(
+        actor.id,
+        'ADMIN_ASSISTED_LISTING_RECONFIRMED',
+        id,
+        listing.ownerId,
+        {},
+        db,
+      );
+      return result;
+    });
+  }
+
+  async submitAssisted(actor: AuthUser, id: string) {
+    this.assertAdmin(actor);
+    return this.withListingLock(id, async (db) => {
+      const listing = await this.findAssistedListing(db, id);
+      const result = await this.submitOnDb(db, listing.ownerId, id);
+      await this.auditListing(
+        actor.id,
+        'ADMIN_ASSISTED_LISTING_SUBMITTED',
+        id,
+        listing.ownerId,
+        {},
+        db,
+      );
+      return result;
+    });
+  }
+
+  async removeAssisted(actor: AuthUser, id: string) {
+    this.assertAdmin(actor);
+    let deletedObjects: Array<{ key: string; content: Buffer }> = [];
+    try {
+      return await this.withListingLock(id, async (db) => {
+        const listing = await this.findAssistedListing(db, id);
+        deletedObjects = await this.removeOnDb(db, listing.ownerId, id);
+        await this.auditListing(
+          actor.id,
+          'ADMIN_ASSISTED_LISTING_DELETED',
+          id,
+          listing.ownerId,
+          {},
+          db,
+        );
+      });
+    } catch (error) {
+      // This also covers errors raised after the callback, including a failed
+      // transaction commit. Prisma rolls the DB transaction back separately.
+      await this.restoreObjects(deletedObjects, error);
+      throw error;
+    }
+  }
+
+  private assertAdmin(actor: AuthUser) {
+    if (actor.role !== 'ADMIN')
+      throw new ForbiddenException('Admin role required');
+  }
+
+  private async auditListing(
+    actorId: string,
+    action: string,
+    listingId: string,
+    targetOwnerId?: string,
+    metadata: Prisma.InputJsonValue = {},
+    db: PrismaService | Prisma.TransactionClient = this.prisma,
+  ) {
+    if (!this.audit) throw new Error('Admin audit service is not configured');
+    await this.audit.record(
+      {
+        actorId,
+        action,
+        entityType: 'LISTING',
+        entityId: listingId,
+        listingId,
+        targetOwnerId,
+        metadata,
+      },
+      db,
+    );
+  }
+
+  listAudit(listingId?: string) {
+    if (!this.audit) throw new Error('Admin audit service is not configured');
+    return this.audit.list(listingId);
+  }
+
+  private async findAssistedListing(db: Prisma.TransactionClient, id: string) {
+    const listing = await db.listing.findUnique({
+      where: { id },
+      select: { ownerId: true, owner: { select: { role: true } } },
+    });
+    if (!listing || listing.owner?.role !== 'OWNER')
+      throw new NotFoundException('Listing not found');
+    return listing;
   }
 
   async updateAvailability(
@@ -308,7 +552,16 @@ export class ListingsService {
     id: string,
     input: { availabilityStatus: ListingAvailabilityStatus },
   ) {
-    const result = await this.prisma.listing.updateMany({
+    return this.updateAvailabilityOnDb(this.prisma, ownerId, id, input);
+  }
+
+  private async updateAvailabilityOnDb(
+    db: PrismaService | Prisma.TransactionClient,
+    ownerId: string,
+    id: string,
+    input: { availabilityStatus: ListingAvailabilityStatus },
+  ) {
+    const result = await db.listing.updateMany({
       where: { id, ownerId },
       data: {
         availabilityStatus: input.availabilityStatus,
@@ -316,46 +569,92 @@ export class ListingsService {
       },
     });
     if (result.count === 0) throw new NotFoundException('Listing not found');
-    return this.getMine(ownerId, id);
+    return db.listing.findUnique({ where: { id } });
   }
 
   async reconfirm(ownerId: string, id: string) {
-    const result = await this.prisma.listing.updateMany({
+    return this.reconfirmOnDb(this.prisma, ownerId, id);
+  }
+
+  private async reconfirmOnDb(
+    db: PrismaService | Prisma.TransactionClient,
+    ownerId: string,
+    id: string,
+  ) {
+    const result = await db.listing.updateMany({
       where: { id, ownerId },
       data: { lastConfirmedAt: new Date() },
     });
     if (result.count === 0) throw new NotFoundException('Listing not found');
-    return this.getMine(ownerId, id);
+    return db.listing.findUnique({ where: { id } });
   }
 
   async remove(ownerId: string, id: string) {
     return this.withListingLock(id, async (db) => {
-      await this.assertOwnedDraft(db, ownerId, id);
-      const images = await db.listingImage.findMany({
-        where: { listingId: id },
-      });
-      const backups = await Promise.all(
-        images.map(async (image: { objectKey: string }) => ({
-          key: image.objectKey,
-          content: await this.imageStorage!.get(image.objectKey),
-        })),
-      );
-      const deleted: Array<{ key: string; content: Buffer }> = [];
       try {
-        for (const backup of backups) {
-          await this.imageStorage!.delete(backup.key);
-          deleted.push(backup);
-        }
-        const result = await db.listing.deleteMany({
-          where: { id, ownerId, status: ListingStatus.DRAFT },
-        });
-        if (result.count !== 1)
-          throw new NotFoundException('Listing not found');
+        await this.removeOnDb(db, ownerId, id);
       } catch (error) {
-        await this.restoreObjects(deleted, error);
         throw error;
       }
     });
+  }
+
+  private async removeOnDb(
+    db: PrismaService | Prisma.TransactionClient,
+    ownerId: string,
+    id: string,
+  ): Promise<Array<{ key: string; content: Buffer }>> {
+    await this.assertOwnedDraft(db, ownerId, id);
+    const images = await db.listingImage.findMany({ where: { listingId: id } });
+    const backups = await Promise.all(
+      images.map(async (image: { objectKey: string }) => ({
+        key: image.objectKey,
+        content: await this.imageStorage!.get(image.objectKey),
+      })),
+    );
+    const deleted: Array<{ key: string; content: Buffer }> = [];
+    try {
+      for (const backup of backups) {
+        await this.imageStorage!.delete(backup.key);
+        deleted.push(backup);
+      }
+      const result = await db.listing.deleteMany({
+        where: { id, ownerId, status: ListingStatus.DRAFT },
+      });
+      if (result.count !== 1) throw new NotFoundException('Listing not found');
+      return deleted;
+    } catch (error) {
+      await this.restoreObjects(deleted, error);
+      throw error;
+    }
+  }
+
+  private async submitOnDb(
+    db: PrismaService | Prisma.TransactionClient,
+    ownerId: string,
+    id: string,
+  ) {
+    const listing = await db.listing.findFirst({
+      where: { id, ownerId },
+      select: { status: true },
+    });
+    if (!listing) throw new NotFoundException('Listing not found');
+    if (listing.status === ListingStatus.SUBMITTED)
+      return db.listing.findUnique({ where: { id } });
+    if (
+      listing.status !== ListingStatus.DRAFT &&
+      listing.status !== ListingStatus.REJECTED
+    )
+      throw new ConflictException(
+        'Listing cannot be submitted in its current status',
+      );
+    const result = await db.listing.updateMany({
+      where: { id, ownerId, status: listing.status },
+      data: { status: ListingStatus.SUBMITTED, rejectionReason: null },
+    });
+    if (result.count !== 1)
+      throw new ConflictException('Listing changed during submission');
+    return db.listing.findUnique({ where: { id } });
   }
 
   async listImages(ownerId: string, listingId: string) {
