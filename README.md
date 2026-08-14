@@ -1,6 +1,6 @@
 # Alquileres Uspallata
 
-I07 direct contact on branch `i07-direct-contact`.
+I05 public catalog, I06 availability and freshness, and I07 direct contact on branch `i07-direct-contact`.
 
 This increment adds the public listings catalog on top of I04 review and publication. The catalog exposes only listings whose `status` is `APPROVED` and whose `publicationStatus` is `PUBLISHED`; drafts, submitted, rejected, approved-but-unpublished, and other private listings are excluded.
 
@@ -27,7 +27,7 @@ pnpm --filter @alquileres/api prisma:migrate:dev
 pnpm dev
 ```
 
-The API exposes the foundation auth endpoints plus I02/I03/I04/I05:
+The API exposes the foundation auth endpoints plus I02/I03/I04/I05/I06/I07:
 
 - `POST /auth/login`, `GET /auth/me`, `GET /auth/admin-check`
 - `GET /listings` and `GET /listings/:id` (authenticated owner's listings)
@@ -37,6 +37,8 @@ The API exposes the foundation auth endpoints plus I02/I03/I04/I05:
 - `GET /admin/listings/review` (admin; submitted listings)
 - `POST /admin/listings/:id/approve`, `/reject` with `{ "reason": "..." }`, `/publish`
 - `GET /public/listings` and `GET /public/listings/:id` (public catalog and ficha)
+- `PATCH /listings/:id/availability` and `POST /listings/:id/reconfirm` (owner availability and freshness)
+- `POST /public/listings/:id/contact` (visitor direct contact)
 
 ## Availability and freshness (I06)
 
@@ -46,4 +48,4 @@ Each listing has an independent `availabilityStatus` (`AVAILABLE` or `UNAVAILABL
 
 `POST /public/listings/:id/contact` accepts `{ "visitorName": "...", "visitorEmail": "...", "message": "..." }` for an `APPROVED` and `PUBLISHED` listing. The server resolves and stores the listing owner association; `ownerId`, passwords, storage keys, and owner contact details are never accepted from or returned to the visitor. Names are limited to 120 characters, emails to 254, and messages to 2,000. Each accepted submission creates one `ContactEvent` and returns `{ "status": "RECEIVED" }`; non-public or unknown listings return the same unavailable `404` shape as the public ficha. The migration can be reverted by dropping `contact_events` and its indexes/foreign keys.
 
-Later increments remain excluded: assisted admin, audit, deployment, payments, reservations, tourism, realtime flows, and notifications.
+I08 and later increments remain excluded: assisted admin, audit, deployment, payments, reservations, tourism, realtime flows, and notifications.
