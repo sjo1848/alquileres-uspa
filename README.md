@@ -1,8 +1,8 @@
 # Alquileres Uspallata
 
-I01 foundation on branch `i01-h07-controlled-build`.
+I02 owner listing draft CRUD on branch `i02-listing-draft-owner-crud`.
 
-This increment contains only the pnpm monorepo foundation, Vue 3 + Vite, NestJS, PostgreSQL + Prisma, authentication/roles foundation, CI, and test structure. Product increments I02–I09 are intentionally not implemented.
+This increment adds authenticated OWNER management of their own Listing records in `DRAFT` status. Ownership is derived server-side from the bearer token; clients cannot choose `ownerId`. Publication, images, moderation, availability, contact events, assisted admin, payments, reservations, tourism, and realtime flows are not included.
 
 ## Local setup
 
@@ -15,10 +15,11 @@ pnpm --filter @alquileres/api prisma:migrate:dev
 pnpm dev
 ```
 
-The API exposes only the foundation auth endpoints:
+The API exposes the foundation auth endpoints plus I02:
 
 - `POST /auth/login`
 - `GET /auth/me`
 - `GET /auth/admin-check` (foundation-only server-side role enforcement check)
-
-No listing, image, moderation, catalogue, availability, contact, assisted-admin, or deploy product flows are included in I01.
+- `GET /listings` (authenticated OWNER's drafts)
+- `POST /listings` (creates a DRAFT; `ownerId` is ignored/not accepted from input)
+- `GET /listings/:id`, `PATCH /listings/:id`, `DELETE /listings/:id` (own drafts only)
