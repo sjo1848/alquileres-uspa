@@ -37,6 +37,7 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
   listings     Listing[]
+  contactEvents ContactEvent[]
 
   @@map("users")
 }
@@ -58,10 +59,27 @@ model Listing {
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
   images         ListingImage[]
+  contactEvents  ContactEvent[]
 
   @@index([ownerId, status])
   @@index([publicationStatus, availabilityStatus, lastConfirmedAt])
   @@map("listings")
+}
+
+model ContactEvent {
+  id            String   @id @default(cuid())
+  listingId     String   @map("listing_id")
+  ownerId       String   @map("owner_id")
+  visitorName   String   @map("visitor_name")
+  visitorEmail  String   @map("visitor_email")
+  message       String
+  createdAt     DateTime @default(now()) @map("created_at")
+  listing       Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, createdAt])
+  @@index([ownerId, createdAt])
+  @@map("contact_events")
 }
 
 model ListingImage {
