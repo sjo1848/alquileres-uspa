@@ -38,8 +38,29 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
   listings     Listing[]
   contactEvents ContactEvent[]
+  adminAuditEvents AdminAuditLog[] @relation("AuditActor")
+  targetedAuditEvents AdminAuditLog[] @relation("AuditTargetOwner")
 
   @@map("users")
+}
+
+model AdminAuditLog {
+  id            String   @id @default(cuid())
+  actorId       String   @map("actor_id")
+  action        String
+  entityType    String   @map("entity_type")
+  entityId      String?  @map("entity_id")
+  listingId     String?  @map("listing_id")
+  targetOwnerId String?  @map("target_owner_id")
+  metadata      Json
+  createdAt     DateTime @default(now()) @map("created_at")
+  actor         User     @relation("AuditActor", fields: [actorId], references: [id], onDelete: Restrict)
+  targetOwner   User?    @relation("AuditTargetOwner", fields: [targetOwnerId], references: [id], onDelete: Restrict)
+
+  @@index([actorId, createdAt])
+  @@index([listingId, createdAt])
+  @@index([targetOwnerId, createdAt])
+  @@map("admin_audit_logs")
 }
 
 model Listing {

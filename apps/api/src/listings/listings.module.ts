@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
+import { AdminAuditModule } from '../audit/admin-audit.module.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { ListingsController } from './listings.controller.js';
 import { AdminListingsController } from './admin-listings.controller.js';
@@ -11,7 +12,7 @@ import {
 } from './listing-image.storage.js';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, AdminAuditModule],
   controllers: [
     ListingsController,
     AdminListingsController,

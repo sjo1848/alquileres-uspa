@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ListingsService } from './listings.service.js';
 
 describe('ListingsService ownership', () => {
+  const admin = { id: 'admin-1', email: 'admin@test', role: 'ADMIN' as const };
   const listing = { id: 'l1', ownerId: 'owner-a', status: 'DRAFT' };
   const prisma = {
     listing: {
@@ -19,7 +20,8 @@ describe('ListingsService ownership', () => {
     $queryRaw: vi.fn(),
   } as any;
   const storage = { get: vi.fn(), delete: vi.fn(), put: vi.fn() };
-  const service = new ListingsService(prisma, storage);
+  const audit = { record: vi.fn() } as any;
+  const service = new ListingsService(prisma, storage, audit);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -202,9 +204,12 @@ describe('ListingsService ownership', () => {
     (prisma as any).listing.findUnique.mockResolvedValue({
       status: 'APPROVED',
       publicationStatus: 'UNPUBLISHED',
+      owner: { role: 'OWNER' },
     });
     (prisma as any).listing.updateMany.mockResolvedValue({ count: 0 });
-    await expect(service.publish('l1')).rejects.toThrow('approved unpublished');
+    await expect(service.publish(admin, 'l1')).rejects.toThrow(
+      'approved unpublished',
+    );
     expect((prisma as any).listing.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
@@ -220,11 +225,12 @@ describe('ListingsService ownership', () => {
     (prisma as any).listing.findUnique.mockResolvedValue({
       status: 'APPROVED',
       rejectionReason: null,
+      owner: { role: 'OWNER' },
     });
     (prisma as any).listing.updateMany.mockResolvedValue({ count: 0 });
-    await expect(service.reject('l1', 'Falta información')).rejects.toThrow(
-      'awaiting review',
-    );
+    await expect(
+      service.reject(admin, 'l1', 'Falta información'),
+    ).rejects.toThrow('awaiting review');
   });
 
   it('returns submitted listing unchanged when submit is repeated', async () => {
@@ -240,30 +246,52 @@ describe('ListingsService ownership', () => {
   it('makes approve, publish, and same-reason reject idempotent', async () => {
     const current = { id: 'l1' };
     (prisma as any).listing.findUnique
-      .mockResolvedValueOnce({ status: 'APPROVED' })
+      .mockResolvedValueOnce({ status: 'APPROVED', owner: { role: 'OWNER' } })
       .mockResolvedValueOnce(current)
       .mockResolvedValueOnce({
         status: 'APPROVED',
         publicationStatus: 'PUBLISHED',
+        owner: { role: 'OWNER' },
       })
       .mockResolvedValueOnce(current)
       .mockResolvedValueOnce({
         status: 'REJECTED',
         rejectionReason: 'Falta información',
+        owner: { role: 'OWNER' },
       })
       .mockResolvedValue(current);
     (prisma as any).listing.updateMany.mockResolvedValue({ count: 0 });
-    await expect(service.approve('l1')).resolves.toBe(current);
-    await expect(service.publish('l1')).resolves.toBe(current);
-    await expect(service.reject('l1', 'Falta información')).resolves.toBe(
-      current,
-    );
+    await expect(service.approve(admin, 'l1')).resolves.toBe(current);
+    await expect(service.publish(admin, 'l1')).resolves.toBe(current);
+    await expect(
+      service.reject(admin, 'l1', 'Falta información'),
+    ).resolves.toBe(current);
     expect((prisma as any).listing.updateMany).not.toHaveBeenCalled();
   });
 
   it('rejects a whitespace-only rejection reason', async () => {
-    await expect(service.reject('l1', '   \n\t')).rejects.toBeInstanceOf(
+    await expect(service.reject(admin, 'l1', '   \n\t')).rejects.toBeInstanceOf(
       BadRequestException,
     );
+  });
+
+  it('rolls back the review mutation when its audit fails', async () => {
+    const auditError = new Error('audit failed');
+    audit.record.mockRejectedValueOnce(auditError);
+    prisma.listing.findUnique
+      .mockResolvedValueOnce({
+        status: 'SUBMITTED',
+        ownerId: 'owner-a',
+        owner: { role: 'OWNER' },
+      })
+      .mockResolvedValueOnce({
+        id: 'l1',
+        ownerId: 'owner-a',
+        status: 'APPROVED',
+      });
+    prisma.listing.updateMany.mockResolvedValue({ count: 1 });
+
+    await expect(service.approve(admin, 'l1')).rejects.toBe(auditError);
+    expect(prisma.$transaction).toHaveBeenCalled();
   });
 });

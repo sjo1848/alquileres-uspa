@@ -1,5 +1,7 @@
 # Alquileres Uspallata
 
+I08 admin assisted management and audit on branch `i08-admin-assisted-audit`.
+
 I05 public catalog, I06 availability and freshness, and I07 direct contact on branch `i07-direct-contact`.
 
 This increment adds the public listings catalog on top of I04 review and publication. The catalog exposes only listings whose `status` is `APPROVED` and whose `publicationStatus` is `PUBLISHED`; drafts, submitted, rejected, approved-but-unpublished, and other private listings are excluded.
@@ -48,4 +50,12 @@ Each listing has an independent `availabilityStatus` (`AVAILABLE` or `UNAVAILABL
 
 `POST /public/listings/:id/contact` accepts `{ "visitorName": "...", "visitorEmail": "...", "message": "..." }` for an `APPROVED` and `PUBLISHED` listing. The server resolves and stores the listing owner association; `ownerId`, passwords, storage keys, and owner contact details are never accepted from or returned to the visitor. Names are limited to 120 characters, emails to 254, and messages to 2,000. Each accepted submission creates one `ContactEvent` and returns `{ "status": "RECEIVED" }`; non-public or unknown listings return the same unavailable `404` shape as the public ficha. The migration can be reverted by dropping `contact_events` and its indexes/foreign keys.
 
-I08 and later increments remain excluded: assisted admin, audit, deployment, payments, reservations, tourism, realtime flows, and notifications.
+## Admin assisted management and audit (I08)
+
+`/listings/*` remains an OWNER-only self-service flow and always derives ownership from the authenticated user. ADMIN assistance is an explicit, separate flow under `/admin/listings/assisted`: create requires a server-validated OWNER target, while edit, availability, reconfirmation, submit, and draft deletion resolve the target owner from the persisted Listing. No client-supplied actor is accepted.
+
+Relevant ADMIN actions are persisted in `admin_audit_logs` with actor, action, listing/entity, target owner, timestamp, and non-sensitive metadata. `GET /admin/listings/audit?listingId=...` is ADMIN-only and capped at 100 records. OWNER tokens cannot access assisted routes or audit data. The I08 migration is reversible by dropping its table, indexes, and foreign keys.
+
+Assisted draft deletion keeps the database mutation and audit record in one Prisma transaction. Image-object deletion is external to PostgreSQL, so it uses read-before-delete backups and compensation on failures; this is reversible best effort, not storage/DB atomicity.
+
+I09 and later increments remain excluded: QA integral/deploy, payments, reservations, tourism, realtime flows, and notifications.
