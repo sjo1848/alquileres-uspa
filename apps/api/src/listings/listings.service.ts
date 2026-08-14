@@ -18,6 +18,24 @@ import {
 } from './listing-image.storage.js';
 import { validateListingImage } from './listing-images.validator.js';
 import { CreateListingDto, UpdateListingDto } from './listings.types.js';
+import {
+  PublicListingDto,
+  PublicListingsPageDto,
+  PublicListingsQueryDto,
+} from './public-listings.types.js';
+
+const PUBLIC_LISTING_SELECT = {
+  id: true,
+  title: true,
+  description: true,
+  location: true,
+  pricePerNight: true,
+  maxGuests: true,
+  images: {
+    orderBy: [{ position: 'asc' as const }, { id: 'asc' as const }],
+    select: { id: true, contentType: true, sizeBytes: true, position: true },
+  },
+} satisfies Prisma.ListingSelect;
 
 @Injectable()
 export class ListingsService {
@@ -32,6 +50,107 @@ export class ListingsService {
       where: { ownerId },
       orderBy: { updatedAt: 'desc' },
     });
+  }
+
+  async listPublic(
+    query: PublicListingsQueryDto,
+  ): Promise<PublicListingsPageDto> {
+    if (
+      query.minPricePerNight !== undefined &&
+      query.maxPricePerNight !== undefined &&
+      query.minPricePerNight > query.maxPricePerNight
+    )
+      throw new BadRequestException(
+        'minPricePerNight cannot exceed maxPricePerNight',
+      );
+
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+    const where: Prisma.ListingWhereInput = {
+      status: ListingStatus.APPROVED,
+      publicationStatus: ListingPublicationStatus.PUBLISHED,
+      ...(query.location
+        ? { location: { contains: query.location, mode: 'insensitive' } }
+        : {}),
+      ...(query.maxGuests !== undefined
+        ? { maxGuests: { gte: query.maxGuests } }
+        : {}),
+      ...(query.minPricePerNight !== undefined ||
+      query.maxPricePerNight !== undefined
+        ? {
+            pricePerNight: {
+              ...(query.minPricePerNight !== undefined
+                ? { gte: query.minPricePerNight }
+                : {}),
+              ...(query.maxPricePerNight !== undefined
+                ? { lte: query.maxPricePerNight }
+                : {}),
+            },
+          }
+        : {}),
+    };
+    const [items, totalItems] = await Promise.all([
+      this.prisma.listing.findMany({
+        where,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        select: PUBLIC_LISTING_SELECT,
+      }),
+      this.prisma.listing.count({ where }),
+    ]);
+    return {
+      items: items.map((item) => this.toPublicListing(item)),
+      page,
+      pageSize,
+      totalItems,
+      totalPages: Math.ceil(totalItems / pageSize),
+    };
+  }
+
+  async getPublic(id: string): Promise<PublicListingDto> {
+    const listing = await this.prisma.listing.findFirst({
+      where: {
+        id,
+        status: ListingStatus.APPROVED,
+        publicationStatus: ListingPublicationStatus.PUBLISHED,
+      },
+      select: PUBLIC_LISTING_SELECT,
+    });
+    if (!listing) throw new NotFoundException('Listing not found');
+    return this.toPublicListing(listing);
+  }
+
+  private toPublicListing(listing: {
+    id: string;
+    title: string;
+    description: string;
+    location: string;
+    pricePerNight: number;
+    maxGuests: number;
+    images: Array<{
+      id: string;
+      contentType: string;
+      sizeBytes: number;
+      position: number;
+    }>;
+  }): PublicListingDto {
+    return {
+      id: listing.id,
+      title: listing.title,
+      description: listing.description,
+      location: listing.location,
+      pricePerNight: listing.pricePerNight,
+      maxGuests: listing.maxGuests,
+      images: listing.images.map(
+        ({ id, contentType, sizeBytes, position }) => ({
+          id,
+          contentType,
+          sizeBytes,
+          position,
+        }),
+      ),
+    };
   }
 
   create(ownerId: string, input: CreateListingDto) {
