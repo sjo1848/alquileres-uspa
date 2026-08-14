@@ -10,12 +10,23 @@ describe('ListingsService ownership', () => {
       findFirst: vi.fn(),
       create: vi.fn(),
       updateMany: vi.fn(),
+      delete: vi.fn(),
       deleteMany: vi.fn(),
     },
-  } as never;
-  const service = new ListingsService(prisma);
+    listingImage: { findMany: vi.fn() },
+    $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
+  } as any;
+  const storage = { get: vi.fn(), delete: vi.fn(), put: vi.fn() };
+  const service = new ListingsService(prisma, storage);
 
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    prisma.$transaction.mockImplementation(
+      async (callback: (tx: any) => unknown) => callback(prisma),
+    );
+    prisma.$queryRaw.mockResolvedValue(undefined);
+  });
 
   it('lists only the authenticated owner drafts', async () => {
     await service.listMine('owner-a');
@@ -54,6 +65,8 @@ describe('ListingsService ownership', () => {
   });
 
   it('deletes only the owner draft with an atomic where clause', async () => {
+    (prisma as any).listing.findFirst.mockResolvedValue(listing);
+    (prisma as any).listingImage.findMany.mockResolvedValue([]);
     (prisma as any).listing.deleteMany.mockResolvedValue({ count: 1 });
     await service.remove('owner-a', 'l1');
     expect((prisma as any).listing.deleteMany).toHaveBeenCalledWith({
@@ -62,10 +75,74 @@ describe('ListingsService ownership', () => {
   });
 
   it('translates an atomic delete miss to NotFoundException', async () => {
+    (prisma as any).listing.findFirst.mockResolvedValue(null);
+    await expect(service.remove('owner-a', 'l1')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('deletes all listing objects before deleting the draft metadata', async () => {
+    const images = [
+      { objectKey: 'listings/l1/a.png' },
+      { objectKey: 'listings/l1/b.png' },
+    ];
+    (prisma as any).listing.findFirst.mockResolvedValue(listing);
+    (prisma as any).listingImage.findMany.mockResolvedValue(images);
+    storage.get.mockResolvedValue(Buffer.from('image'));
+    storage.delete.mockResolvedValue(undefined);
+    (prisma as any).listing.deleteMany.mockResolvedValue({ count: 1 });
+
+    await service.remove('owner-a', 'l1');
+
+    expect(storage.delete).toHaveBeenCalledWith('listings/l1/a.png');
+    expect(storage.delete).toHaveBeenCalledWith('listings/l1/b.png');
+    expect((prisma as any).listing.deleteMany).toHaveBeenCalled();
+  });
+
+  it('preserves a storage get failure and does not delete listing metadata', async () => {
+    const getError = new Error('object read failed');
+    (prisma as any).listing.findFirst.mockResolvedValue(listing);
+    (prisma as any).listingImage.findMany.mockResolvedValue([
+      { objectKey: 'listings/l1/a.png' },
+    ]);
+    storage.get.mockRejectedValue(getError);
+
+    await expect(service.remove('owner-a', 'l1')).rejects.toBe(getError);
+    expect(storage.delete).not.toHaveBeenCalled();
+    expect((prisma as any).listing.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('compensates objects already deleted when listing cleanup partially fails', async () => {
+    const deleteError = new Error('second object delete failed');
+    const images = [
+      { objectKey: 'listings/l1/a.png' },
+      { objectKey: 'listings/l1/b.png' },
+    ];
+    (prisma as any).listing.findFirst.mockResolvedValue(listing);
+    (prisma as any).listingImage.findMany.mockResolvedValue(images);
+    storage.get.mockResolvedValue(Buffer.from('image'));
+    storage.delete
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(deleteError);
+
+    await expect(service.remove('owner-a', 'l1')).rejects.toBe(deleteError);
+    expect(storage.put).toHaveBeenCalledWith(
+      'listings/l1/a.png',
+      Buffer.from('image'),
+    );
+    expect((prisma as any).listing.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('does not accept a final delete that no longer matches owner and draft status', async () => {
+    (prisma as any).listing.findFirst.mockResolvedValue(listing);
+    (prisma as any).listingImage.findMany.mockResolvedValue([]);
     (prisma as any).listing.deleteMany.mockResolvedValue({ count: 0 });
     await expect(service.remove('owner-a', 'l1')).rejects.toBeInstanceOf(
       NotFoundException,
     );
+    expect((prisma as any).listing.deleteMany).toHaveBeenCalledWith({
+      where: { id: 'l1', ownerId: 'owner-a', status: 'DRAFT' },
+    });
   });
 
   it('derives ownerId from the authenticated identity on create', async () => {
