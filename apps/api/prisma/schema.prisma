@@ -40,7 +40,25 @@ model Listing {
   status         ListingStatus @default(DRAFT)
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
+  images         ListingImage[]
 
   @@index([ownerId, status])
   @@map("listings")
+}
+
+model ListingImage {
+  id           String   @id @default(cuid())
+  listingId    String   @map("listing_id")
+  listing      Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  objectKey    String   @unique @map("object_key")
+  originalName String   @map("original_name")
+  contentType  String   @map("content_type")
+  sizeBytes    Int      @map("size_bytes")
+  position     Int
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@unique([listingId, position])
+  @@index([listingId, position])
+  @@map("listing_images")
 }
