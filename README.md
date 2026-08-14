@@ -1,6 +1,6 @@
 # Alquileres Uspallata
 
-I05 public catalog on branch `i05-public-catalog`.
+I07 direct contact on branch `i07-direct-contact`.
 
 This increment adds the public listings catalog on top of I04 review and publication. The catalog exposes only listings whose `status` is `APPROVED` and whose `publicationStatus` is `PUBLISHED`; drafts, submitted, rejected, approved-but-unpublished, and other private listings are excluded.
 
@@ -42,4 +42,8 @@ The API exposes the foundation auth endpoints plus I02/I03/I04/I05:
 
 Each listing has an independent `availabilityStatus` (`AVAILABLE` or `UNAVAILABLE`) and `lastConfirmedAt`. An authenticated OWNER can update availability with `PATCH /listings/:id/availability` using `{ "availabilityStatus": "AVAILABLE" }`, or reconfirm it with `POST /listings/:id/reconfirm`; both operations are restricted server-side to that owner's listing and do not change review or publication state. The public catalog and ficha expose availability, `lastConfirmedAt`, and `freshnessStatus` (`FRESH` for confirmations within 30 days, otherwise `STALE`).
 
-I07 and all later increments remain excluded: contact events, assisted admin, audit, deployment, payments, reservations, tourism, realtime flows, and any functionality introduced after I06.
+## Direct contact (I07)
+
+`POST /public/listings/:id/contact` accepts `{ "visitorName": "...", "visitorEmail": "...", "message": "..." }` for an `APPROVED` and `PUBLISHED` listing. The server resolves and stores the listing owner association; `ownerId`, passwords, storage keys, and owner contact details are never accepted from or returned to the visitor. Names are limited to 120 characters, emails to 254, and messages to 2,000. Each accepted submission creates one `ContactEvent` and returns `{ "status": "RECEIVED" }`; non-public or unknown listings return the same unavailable `404` shape as the public ficha. The migration can be reverted by dropping `contact_events` and its indexes/foreign keys.
+
+Later increments remain excluded: assisted admin, audit, deployment, payments, reservations, tourism, realtime flows, and notifications.
