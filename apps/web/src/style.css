@@ -1,0 +1,109 @@
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #17324d;
+  background: #f4f7fa;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+}
+header,
+main,
+footer {
+  width: min(100% - 2rem, 42rem);
+  margin: auto;
+}
+header {
+  padding: 3rem 0 1rem;
+}
+h1 {
+  font-size: clamp(1.8rem, 7vw, 3.5rem);
+}
+main {
+  min-height: 55vh;
+}
+.card {
+  padding: clamp(1.25rem, 5vw, 2.5rem);
+  border: 1px solid #c9d5df;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 1rem 3rem #17324d1a;
+}
+.session-state {
+  max-width: 42rem;
+  margin: 0 auto;
+}
+.session-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.secondary {
+  color: #17324d;
+  background: #fff;
+}
+.eyebrow {
+  color: #8b4f12;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+nav {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+a {
+  color: #145b8c;
+  font-weight: 600;
+}
+form {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 28rem;
+}
+input,
+button {
+  font: inherit;
+  padding: 0.7rem;
+  border: 1px solid #8ea3b5;
+  border-radius: 0.4rem;
+}
+button {
+  color: #fff;
+  background: #145b8c;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.6;
+}
+.error {
+  color: #a32222;
+  font-weight: 600;
+}
+footer {
+  padding: 2rem 0;
+  color: #40566b;
+}
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 1;
+  padding: 0.75rem;
+  background: #fff;
+}
+@media (min-width: 48rem) {
+  header,
+  main,
+  footer {
+    width: min(100% - 4rem, 42rem);
+  }
+}

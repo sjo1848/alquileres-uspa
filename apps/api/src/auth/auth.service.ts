@@ -1,9 +1,17 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AuthTokenPayload, AuthUser } from './auth.types.js';
+
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
 
 @Injectable()
 export class AuthService {
@@ -16,13 +24,40 @@ export class AuthService {
     }
   }
 
+  async registerOwner(email: string, password: string): Promise<AuthUser> {
+    email = normalizeEmail(email);
+    const passwordHash = await bcrypt.hash(password, 12);
+    try {
+      const user = await this.prisma.user.create({
+        data: { email, passwordHash, role: Role.OWNER },
+      });
+      return { id: user.id, email: user.email, role: user.role };
+    } catch (error) {
+      if ((error as { code?: string }).code === 'P2002') {
+        throw new ConflictException('Email already registered');
+      }
+      throw error;
+    }
+  }
+
   async validateCredentials(
     email: string,
     password: string,
   ): Promise<AuthUser> {
+    email = normalizeEmail(email);
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+    return { id: user.id, email: user.email, role: user.role };
+  }
+
+  async revalidate(payload: AuthTokenPayload): Promise<AuthUser> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.id },
+    });
+    if (!user || user.email !== payload.email) {
+      throw new UnauthorizedException('Invalid or expired token');
     }
     return { id: user.id, email: user.email, role: user.role };
   }

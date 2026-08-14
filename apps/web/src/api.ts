@@ -1,0 +1,34 @@
+export type Role = 'OWNER' | 'ADMIN';
+export type User = { id: string; email: string; role: Role };
+
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+export async function request<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const response = await fetch(`${API_URL}${path}`, {
+    credentials: 'include',
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...options.headers },
+  });
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string | string[];
+  };
+  if (!response.ok) {
+    const message = Array.isArray(body.message)
+      ? body.message.join('. ')
+      : body.message;
+    throw new ApiError(response.status, message ?? 'Ocurrió un error');
+  }
+  return body as T;
+}
