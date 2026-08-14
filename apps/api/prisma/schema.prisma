@@ -24,6 +24,11 @@ enum ListingPublicationStatus {
   PUBLISHED
 }
 
+enum ListingAvailabilityStatus {
+  AVAILABLE
+  UNAVAILABLE
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -47,12 +52,15 @@ model Listing {
   maxGuests      Int           @map("max_guests")
   status         ListingStatus @default(DRAFT)
   publicationStatus ListingPublicationStatus @default(UNPUBLISHED) @map("publication_status")
+  availabilityStatus ListingAvailabilityStatus @default(AVAILABLE) @map("availability_status")
+  lastConfirmedAt DateTime @default(now()) @map("last_confirmed_at")
   rejectionReason String?       @map("rejection_reason")
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
   images         ListingImage[]
 
   @@index([ownerId, status])
+  @@index([publicationStatus, availabilityStatus, lastConfirmedAt])
   @@map("listings")
 }
 

@@ -8,6 +8,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import {
   ListingPublicationStatus,
+  ListingAvailabilityStatus,
   ListingStatus,
   Prisma,
 } from '@prisma/client';
@@ -31,11 +32,15 @@ const PUBLIC_LISTING_SELECT = {
   location: true,
   pricePerNight: true,
   maxGuests: true,
+  availabilityStatus: true,
+  lastConfirmedAt: true,
   images: {
     orderBy: [{ position: 'asc' as const }, { id: 'asc' as const }],
     select: { id: true, contentType: true, sizeBytes: true, position: true },
   },
 } satisfies Prisma.ListingSelect;
+
+const FRESHNESS_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class ListingsService {
@@ -128,6 +133,8 @@ export class ListingsService {
     location: string;
     pricePerNight: number;
     maxGuests: number;
+    availabilityStatus: ListingAvailabilityStatus;
+    lastConfirmedAt: Date;
     images: Array<{
       id: string;
       contentType: string;
@@ -142,6 +149,12 @@ export class ListingsService {
       location: listing.location,
       pricePerNight: listing.pricePerNight,
       maxGuests: listing.maxGuests,
+      availabilityStatus: listing.availabilityStatus,
+      lastConfirmedAt: listing.lastConfirmedAt,
+      freshnessStatus:
+        Date.now() - listing.lastConfirmedAt.getTime() <= FRESHNESS_WINDOW_MS
+          ? 'FRESH'
+          : 'STALE',
       images: listing.images.map(
         ({ id, contentType, sizeBytes, position }) => ({
           id,
@@ -285,6 +298,31 @@ export class ListingsService {
     const result = await this.prisma.listing.updateMany({
       where: { id, ownerId, status: ListingStatus.DRAFT },
       data: input,
+    });
+    if (result.count === 0) throw new NotFoundException('Listing not found');
+    return this.getMine(ownerId, id);
+  }
+
+  async updateAvailability(
+    ownerId: string,
+    id: string,
+    input: { availabilityStatus: ListingAvailabilityStatus },
+  ) {
+    const result = await this.prisma.listing.updateMany({
+      where: { id, ownerId },
+      data: {
+        availabilityStatus: input.availabilityStatus,
+        lastConfirmedAt: new Date(),
+      },
+    });
+    if (result.count === 0) throw new NotFoundException('Listing not found');
+    return this.getMine(ownerId, id);
+  }
+
+  async reconfirm(ownerId: string, id: string) {
+    const result = await this.prisma.listing.updateMany({
+      where: { id, ownerId },
+      data: { lastConfirmedAt: new Date() },
     });
     if (result.count === 0) throw new NotFoundException('Listing not found');
     return this.getMine(ownerId, id);

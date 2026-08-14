@@ -14,6 +14,9 @@ describe('public listings catalog', () => {
     location: 'Uspallata',
     pricePerNight: 100,
     maxGuests: 4,
+    availabilityStatus: 'AVAILABLE',
+    lastConfirmedAt: new Date(),
+    freshnessStatus: 'FRESH',
     images: [
       { id: 'image-1', contentType: 'image/jpeg', sizeBytes: 12, position: 0 },
     ],
