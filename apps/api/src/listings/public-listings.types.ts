@@ -47,6 +47,9 @@ export class PublicListingDto {
   pricePerNight!: number;
   maxGuests!: number;
   images!: PublicListingImageDto[];
+  availabilityStatus!: 'AVAILABLE' | 'UNAVAILABLE';
+  lastConfirmedAt!: Date;
+  freshnessStatus!: 'FRESH' | 'STALE';
 }
 
 export class PublicListingsPageDto {

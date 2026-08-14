@@ -38,4 +38,8 @@ The API exposes the foundation auth endpoints plus I02/I03/I04/I05:
 - `POST /admin/listings/:id/approve`, `/reject` with `{ "reason": "..." }`, `/publish`
 - `GET /public/listings` and `GET /public/listings/:id` (public catalog and ficha)
 
-I06 and all later increments are explicitly excluded: availability, contact events, assisted admin, audit, deployment, payments, reservations, tourism, realtime flows, and any functionality introduced after I05.
+## Availability and freshness (I06)
+
+Each listing has an independent `availabilityStatus` (`AVAILABLE` or `UNAVAILABLE`) and `lastConfirmedAt`. An authenticated OWNER can update availability with `PATCH /listings/:id/availability` using `{ "availabilityStatus": "AVAILABLE" }`, or reconfirm it with `POST /listings/:id/reconfirm`; both operations are restricted server-side to that owner's listing and do not change review or publication state. The public catalog and ficha expose availability, `lastConfirmedAt`, and `freshnessStatus` (`FRESH` for confirmations within 30 days, otherwise `STALE`).
+
+I07 and all later increments remain excluded: contact events, assisted admin, audit, deployment, payments, reservations, tourism, realtime flows, and any functionality introduced after I06.

@@ -65,6 +65,32 @@ describe('ListingsService ownership', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
+  it('updates availability only for the authenticated owner', async () => {
+    (prisma as any).listing.updateMany.mockResolvedValue({ count: 1 });
+    (prisma as any).listing.findFirst.mockResolvedValue({
+      ...listing,
+      availabilityStatus: 'UNAVAILABLE',
+    });
+    await service.updateAvailability('owner-a', 'l1', {
+      availabilityStatus: 'UNAVAILABLE' as any,
+    });
+    expect((prisma as any).listing.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'l1', ownerId: 'owner-a' },
+        data: expect.objectContaining({ availabilityStatus: 'UNAVAILABLE' }),
+      }),
+    );
+  });
+
+  it('reconfirms only the authenticated owner listing', async () => {
+    (prisma as any).listing.updateMany.mockResolvedValue({ count: 1 });
+    (prisma as any).listing.findFirst.mockResolvedValue(listing);
+    await service.reconfirm('owner-a', 'l1');
+    expect((prisma as any).listing.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'l1', ownerId: 'owner-a' } }),
+    );
+  });
+
   it('deletes only the owner draft with an atomic where clause', async () => {
     (prisma as any).listing.findFirst.mockResolvedValue(listing);
     (prisma as any).listingImage.findMany.mockResolvedValue([]);

@@ -18,7 +18,11 @@ import { Roles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { ListingsService } from './listings.service.js';
 import { ReorderListingImageDto } from './listing-images.types.js';
-import { CreateListingDto, UpdateListingDto } from './listings.types.js';
+import {
+  CreateListingDto,
+  UpdateListingDto,
+  UpdateListingAvailabilityDto,
+} from './listings.types.js';
 
 @Controller('listings')
 @Roles(Role.OWNER)
@@ -43,6 +47,21 @@ export class ListingsController {
     @Body() input: UpdateListingDto,
   ) {
     return this.listings.update(req.user!.id, id, input);
+  }
+
+  @Patch(':id/availability') updateAvailability(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() input: UpdateListingAvailabilityDto,
+  ) {
+    return this.listings.updateAvailability(req.user!.id, id, input);
+  }
+
+  @Post(':id/reconfirm') reconfirm(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    return this.listings.reconfirm(req.user!.id, id);
   }
   @Delete(':id') async remove(
     @Req() req: AuthenticatedRequest,
