@@ -29,6 +29,8 @@ pnpm --filter @alquileres/api prisma:migrate:dev
 pnpm dev
 ```
 
+`pnpm dev` ejecuta la API desde el runtime compilado (`dist`) para conservar la metadata de decoradores de Nest y evitar desajustes de metadata al usar `tsx` directamente.
+
 The API exposes the foundation auth endpoints plus I02/I03/I04/I05/I06/I07:
 
 - `POST /auth/login`, `GET /auth/me`, `GET /auth/admin-check`
@@ -59,3 +61,25 @@ Relevant ADMIN actions are persisted in `admin_audit_logs` with actor, action, l
 Assisted draft deletion keeps the database mutation and audit record in one Prisma transaction. Image-object deletion is external to PostgreSQL, so it uses read-before-delete backups and compensation on failures; this is reversible best effort, not storage/DB atomicity.
 
 I09 and later increments remain excluded: QA integral/deploy, payments, reservations, tourism, realtime flows, and notifications.
+
+## I09 QA and reversible operations
+
+The I09 checks are intentionally operational and do not add product flows:
+
+```bash
+pnpm install --frozen-lockfile
+cp .env.example .env
+pnpm prisma:generate
+DATABASE_URL="postgresql://alquileres:alquileres@localhost:5432/alquileres?schema=public" pnpm prisma:validate
+pnpm security:check
+pnpm format:check
+pnpm lint
+pnpm test
+pnpm build
+```
+
+For a local database, run `docker compose up -d postgres` and then apply migrations with `pnpm --filter @alquileres/api prisma:deploy`. This is forward-only migration application; rollback is manual and must use the inverse SQL for the specific migration after a backup/approval. No production deployment is performed by these commands.
+
+With the API running, `pnpm smoke` verifies `GET /health`; use `SMOKE_BASE_URL` for another local base URL. The health response is intentionally non-sensitive and returns HTTP 503 when the database check fails.
+
+`CORS_ORIGINS` is a comma-separated exact-origin allowlist. It defaults to `http://localhost:5173` for local development; production-like environments must set it explicitly. `JWT_SECRET` must be replaced with a strong runtime secret and must never be committed. The `ci-only-secret` value configured in GitHub Actions is a non-production fixture used only by CI; production secrets must be provided at runtime and must never be committed. The CI workflow runs the secret check, migration deploy against its disposable PostgreSQL service, lint, tests, and build.

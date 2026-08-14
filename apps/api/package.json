@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "dev": "tsx watch src/main.ts",
+    "dev": "pnpm build && node dist/main.js",
     "lint": "eslint src --max-warnings 0",
     "test": "vitest run",
     "prisma:generate": "prisma generate",

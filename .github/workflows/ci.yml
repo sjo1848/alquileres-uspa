@@ -35,6 +35,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm security:check
+      - run: pnpm format:check
       - run: pnpm prisma:generate
       - run: pnpm --filter @alquileres/api prisma:deploy
       - run: pnpm lint
