@@ -7,10 +7,11 @@ import { REQUIRED_ROLES, RolesGuard } from './roles.guard.js';
 function contextFor(
   user: AuthenticatedRequest['user'],
   handler: () => unknown,
+  controller?: object,
 ): ExecutionContext {
-  Reflect.defineMetadata(REQUIRED_ROLES, [Role.ADMIN], handler);
   return {
     getHandler: () => handler,
+    getClass: () => controller ?? class TestController {},
     switchToHttp: () => ({ getRequest: () => ({ user }) }),
   } as unknown as ExecutionContext;
 }
@@ -23,6 +24,7 @@ describe('RolesGuard', () => {
       },
     } as never);
     const handler = () => undefined;
+    Reflect.defineMetadata(REQUIRED_ROLES, [Role.ADMIN], handler);
     expect(
       guard.canActivate(
         contextFor({ id: 'a', email: 'a', role: Role.ADMIN }, handler),
@@ -31,6 +33,36 @@ describe('RolesGuard', () => {
     expect(() =>
       guard.canActivate(
         contextFor({ id: 'o', email: 'o', role: Role.OWNER }, handler),
+      ),
+    ).toThrow('denied');
+  });
+
+  it('reads controller metadata and allows OWNER but rejects ADMIN', () => {
+    const guard = new RolesGuard({
+      assertRole: (user: AuthenticatedRequest['user'], roles: Role[]) => {
+        if (!user || !roles.includes(user.role)) throw new Error('denied');
+      },
+    } as never);
+    const handler = () => undefined;
+    class ListingsController {}
+    Reflect.defineMetadata(REQUIRED_ROLES, [Role.OWNER], ListingsController);
+
+    expect(
+      guard.canActivate(
+        contextFor(
+          { id: 'o', email: 'o', role: Role.OWNER },
+          handler,
+          ListingsController,
+        ),
+      ),
+    ).toBe(true);
+    expect(() =>
+      guard.canActivate(
+        contextFor(
+          { id: 'a', email: 'a', role: Role.ADMIN },
+          handler,
+          ListingsController,
+        ),
       ),
     ).toThrow('denied');
   });

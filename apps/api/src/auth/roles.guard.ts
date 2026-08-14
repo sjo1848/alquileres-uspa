@@ -10,7 +10,8 @@ export class RolesGuard implements CanActivate {
   constructor(private readonly auth: AuthService) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const roles = Reflect.getMetadata(REQUIRED_ROLES, context.getHandler()) as
+    const roles = (Reflect.getMetadata(REQUIRED_ROLES, context.getHandler()) ??
+      Reflect.getMetadata(REQUIRED_ROLES, context.getClass())) as
       Role[] | undefined;
     if (!roles?.length) return true;
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();

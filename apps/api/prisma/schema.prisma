@@ -12,6 +12,10 @@ enum Role {
   ADMIN
 }
 
+enum ListingStatus {
+  DRAFT
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -19,6 +23,24 @@ model User {
   role         Role
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+  listings     Listing[]
 
   @@map("users")
+}
+
+model Listing {
+  id             String        @id @default(cuid())
+  ownerId        String        @map("owner_id")
+  owner          User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title          String
+  description    String
+  location       String
+  pricePerNight  Int           @map("price_per_night")
+  maxGuests      Int           @map("max_guests")
+  status         ListingStatus @default(DRAFT)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  @@index([ownerId, status])
+  @@map("listings")
 }
