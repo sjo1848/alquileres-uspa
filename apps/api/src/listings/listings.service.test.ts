@@ -7,7 +7,7 @@ describe('ListingsService ownership', () => {
   const prisma = {
     listing: {
       findMany: vi.fn(),
-      findUnique: vi.fn(),
+      findFirst: vi.fn(),
       create: vi.fn(),
       updateMany: vi.fn(),
       deleteMany: vi.fn(),
@@ -26,19 +26,19 @@ describe('ListingsService ownership', () => {
     );
   });
 
-  it('does not read another owner listing', async () => {
-    (prisma as any).listing.findUnique.mockResolvedValue({
-      ...listing,
-      ownerId: 'owner-b',
-    });
+  it('queries only the authenticated owner draft and translates a miss', async () => {
+    (prisma as any).listing.findFirst.mockResolvedValue(null);
     await expect(service.getMine('owner-a', 'l1')).rejects.toBeInstanceOf(
       NotFoundException,
     );
+    expect((prisma as any).listing.findFirst).toHaveBeenCalledWith({
+      where: { id: 'l1', ownerId: 'owner-a', status: 'DRAFT' },
+    });
   });
 
   it('updates only the owner draft with an atomic where clause', async () => {
     (prisma as any).listing.updateMany.mockResolvedValue({ count: 1 });
-    (prisma as any).listing.findUnique.mockResolvedValue(listing);
+    (prisma as any).listing.findFirst.mockResolvedValue(listing);
     await service.update('owner-a', 'l1', { title: 'x' });
     expect((prisma as any).listing.updateMany).toHaveBeenCalledWith({
       where: { id: 'l1', ownerId: 'owner-a', status: 'DRAFT' },

@@ -21,13 +21,10 @@ export class ListingsService {
   }
 
   async getMine(ownerId: string, id: string) {
-    const listing = await this.prisma.listing.findUnique({ where: { id } });
-    if (
-      !listing ||
-      listing.ownerId !== ownerId ||
-      listing.status !== ListingStatus.DRAFT
-    )
-      throw new NotFoundException('Listing not found');
+    const listing = await this.prisma.listing.findFirst({
+      where: { id, ownerId, status: ListingStatus.DRAFT },
+    });
+    if (!listing) throw new NotFoundException('Listing not found');
     return listing;
   }
 
