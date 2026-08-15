@@ -3,6 +3,8 @@ export type User = { id: string; email: string; role: Role };
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 export const apiUrl = (path: string) => `${API_URL}${path}`;
+export const publicListingPath = (id: string) =>
+  `/public/listings/${encodeURIComponent(id)}`;
 
 export class ApiError extends Error {
   constructor(

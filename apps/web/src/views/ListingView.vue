@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
-import { apiUrl, ApiError, request } from '../api';
+import { computed, reactive, ref, watch } from 'vue';
+import { apiUrl, ApiError, publicListingPath, request } from '../api';
 import { useRoute } from 'vue-router';
 const route = useRoute();
 type Listing = {
@@ -21,17 +21,32 @@ const error = ref('');
 const feedback = ref('');
 const contactError = ref('');
 const submitting = ref(false);
+const failedImages = ref(new Set<string>());
 const contact = reactive({ visitorName: '', visitorEmail: '', message: '' });
-async function load() {
+function resetState() {
+  loading.value = true;
+  error.value = '';
+  listing.value = undefined;
+  feedback.value = '';
+  contactError.value = '';
+  submitting.value = false;
+  failedImages.value = new Set();
+  contact.visitorName = '';
+  contact.visitorEmail = '';
+  contact.message = '';
+}
+async function load(id: string) {
+  resetState();
   try {
-    listing.value = await request<Listing>(
-      `/public/listings/${route.params.id}`,
-    );
+    const nextListing = await request<Listing>(publicListingPath(id));
+    if (route.params.id === id) listing.value = nextListing;
   } catch (e) {
-    error.value =
-      e instanceof ApiError ? e.message : 'No pudimos cargar la ficha.';
+    if (route.params.id === id) {
+      error.value =
+        e instanceof ApiError ? e.message : 'No pudimos cargar la ficha.';
+    }
   } finally {
-    loading.value = false;
+    if (route.params.id === id) loading.value = false;
   }
 }
 async function sendContact() {
@@ -55,12 +70,19 @@ async function sendContact() {
     submitting.value = false;
   }
 }
+function imageFailed(imageId: string) {
+  failedImages.value = new Set(failedImages.value).add(imageId);
+}
 const freshness = computed(() =>
   listing.value?.freshnessStatus === 'FRESH'
     ? 'Confirmación reciente'
     : 'Confirmación desactualizada',
 );
-void load();
+watch(
+  () => route.params.id,
+  (id) => void load(String(id)),
+  { immediate: true },
+);
 </script>
 <template>
   <p v-if="loading" aria-live="polite">Cargando ficha…</p>
@@ -71,12 +93,22 @@ void load();
       <p class="eyebrow">{{ listing.location }}</p>
       <h2>{{ listing.title }}</h2>
       <div class="gallery">
-        <img
-          v-for="image in listing.images"
-          :key="image.id"
-          :src="apiUrl(`/public/listings/${listing.id}/images/${image.id}`)"
-          :alt="`Imagen de ${listing.title}`"
-        />
+        <template v-for="image in listing.images" :key="image.id">
+          <img
+            v-if="!failedImages.has(image.id)"
+            :src="apiUrl(`/public/listings/${listing.id}/images/${image.id}`)"
+            :alt="`Imagen de ${listing.title}`"
+            @error="imageFailed(image.id)"
+          />
+          <div
+            v-else
+            class="image-placeholder"
+            role="img"
+            :aria-label="`Imagen no disponible para ${listing.title}`"
+          >
+            🏔️
+          </div>
+        </template>
       </div>
       <p>{{ listing.description }}</p>
       <p>

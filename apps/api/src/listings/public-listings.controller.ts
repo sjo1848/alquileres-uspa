@@ -8,7 +8,11 @@ export class PublicListingsController {
   constructor(private readonly listings: ListingsService) {}
 
   @Get()
-  list(@Query() query: PublicListingsQueryDto) {
+  list(
+    @Query() query: PublicListingsQueryDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    response.setHeader('Cache-Control', 'no-store, no-cache');
     return this.listings.listPublic(query);
   }
 
@@ -26,7 +30,8 @@ export class PublicListingsController {
   }
 
   @Get(':id')
-  get(@Param('id') id: string) {
+  get(@Param('id') id: string, @Res({ passthrough: true }) response: Response) {
+    response.setHeader('Cache-Control', 'no-store, no-cache');
     return this.listings.getPublic(id);
   }
 }

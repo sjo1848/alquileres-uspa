@@ -1,10 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, request } from './api';
+import { ApiError, publicListingPath, request } from './api';
 import { useSession } from './session';
 
 afterEach(() => vi.restoreAllMocks());
 
 describe('web foundation', () => {
+  it('builds encoded public listing paths', () => {
+    expect(publicListingPath('cabaña/uspa')).toBe(
+      '/public/listings/caba%C3%B1a%2Fuspa',
+    );
+  });
+
   it('normalizes validation arrays and sends cookie credentials', async () => {
     vi.stubGlobal(
       'fetch',
