@@ -2,7 +2,11 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { apiUrl } from '../api';
 import { useSession } from '../session';
-import { createMutationOwnership, createSelectionGuard } from './area-helpers';
+import {
+  createMutationOwnership,
+  createSelectionGuard,
+  editableListingPayload,
+} from './area-helpers';
 
 type Status = 'DRAFT' | 'SUBMITTED' | 'REJECTED' | 'APPROVED';
 type Availability = 'AVAILABLE' | 'UNAVAILABLE';
@@ -274,9 +278,12 @@ async function assisted(
 }
 async function assistedSave() {
   if (!selected.value) return;
-  const { ownerId, ...listing } = form;
-  void ownerId;
-  await assisted('', 'PATCH', listing, 'Cambios asistidos guardados.');
+  await assisted(
+    '',
+    'PATCH',
+    editableListingPayload(form),
+    'Cambios asistidos guardados.',
+  );
 }
 function imageUrl(listing: Listing, image: Image) {
   return apiUrl(`/admin/listings/${listing.id}/images/${image.id}`);

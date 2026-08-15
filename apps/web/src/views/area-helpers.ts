@@ -4,6 +4,22 @@ export function canEditListing(status: string) {
   return status === 'DRAFT' || status === 'REJECTED';
 }
 
+export function editableListingPayload(input: {
+  title?: string;
+  description?: string;
+  location?: string;
+  pricePerNight?: number;
+  maxGuests?: number;
+}) {
+  return {
+    title: input.title,
+    description: input.description,
+    location: input.location,
+    pricePerNight: input.pricePerNight,
+    maxGuests: input.maxGuests,
+  };
+}
+
 export function createSelectionGuard() {
   let version = 0;
 

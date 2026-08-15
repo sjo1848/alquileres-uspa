@@ -5,6 +5,7 @@ import {
   canEditListing,
   createMutationOwnership,
   createSelectionGuard,
+  editableListingPayload,
 } from './views/area-helpers';
 
 afterEach(() => {
@@ -37,6 +38,30 @@ describe('web foundation', () => {
     expect(canEditListing('REJECTED')).toBe(true);
     expect(canEditListing('SUBMITTED')).toBe(false);
     expect(canEditListing('APPROVED')).toBe(false);
+  });
+  it('builds assisted listing updates with editable fields only', () => {
+    const listing = {
+      id: 'listing-1',
+      ownerId: 'owner-1',
+      status: 'DRAFT',
+      publicationStatus: 'UNPUBLISHED',
+      availabilityStatus: 'AVAILABLE',
+      lastConfirmedAt: '2026-08-15T00:00:00.000Z',
+      updatedAt: '2026-08-15T00:00:00.000Z',
+      images: [],
+      title: 'Casa',
+      description: 'Descripción',
+      location: 'Uspallata',
+      pricePerNight: 100,
+      maxGuests: 4,
+    };
+    expect(editableListingPayload(listing)).toEqual({
+      title: 'Casa',
+      description: 'Descripción',
+      location: 'Uspallata',
+      pricePerNight: 100,
+      maxGuests: 4,
+    });
   });
   it('keeps mutation ownership independent from selection invalidation', () => {
     const mutations = createMutationOwnership();
