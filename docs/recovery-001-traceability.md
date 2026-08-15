@@ -9,7 +9,9 @@ R2 implementation baseline = `903ecdb`. Las filas de BUSCADOR reflejan la
 implementación pública de R2; la matriz sigue siendo un artefacto posterior y
 no está embebida en ese commit de código.
 
-Este documento es el rebaseline compacto de RECOVERY-001. Traza únicamente
+Este documento es el rebaseline compacto de RECOVERY-001. R3 está implementado
+en la rama `recovery-001-r3-owner` y su baseline es estable para el alcance de
+autoservicio OWNER. R4, R5 y la integración E2E permanecen pendientes. Traza únicamente
 capacidades visibles, externamente observables, integradas o de riesgo
 material. No pretende enumerar DTOs, helpers ni decisiones internas.
 
@@ -36,11 +38,11 @@ Estados usados: `EXISTING_BACKEND`, `RECOVERY_REQUIRED`, `NOT_APPLICABLE`.
 | BUSCADOR: freshness           | UI + API                          | La ficha muestra disponibilidad y última confirmación según reglas aprobadas        | UI y API implementadas en R2                                                          | —        |
 | BUSCADOR: contacto            | UI + API + ContactEvent           | Un visitante envía contacto y recibe resultado visible                              | Formulario Vue, endpoint y feedback implementados en R2                               | —        |
 | OWNER: registro y login       | UI + API + persistence + security | Una persona crea cuenta OWNER, inicia sesión y conserva una sesión segura           | Registro OWNER, login, cookie HttpOnly, sesión y UI de auth implementados en R1       | —        |
-| OWNER: mis publicaciones      | UI + API + security               | OWNER ve sólo sus listings                                                          | API/ownership existentes; UI missing                                                  | R3       |
-| OWNER: draft CRUD             | UI + API + persistence            | OWNER crea, edita y elimina un DRAFT propio                                         | API existente; UI missing                                                             | R3       |
-| OWNER: imágenes               | UI + API + storage                | OWNER sube, lista, ordena y elimina imágenes con errores recuperables               | API/storage/validación existentes; UI missing                                         | R3       |
-| OWNER: revisión               | UI + API                          | OWNER envía a revisión, ve estados y puede corregir rechazo                         | API/lifecycle existentes; UI missing                                                  | R3       |
-| OWNER: disponibilidad         | UI + API                          | OWNER cambia disponibilidad y reconfirma; el cambio se refleja públicamente         | API existente; UI missing                                                             | R3, R5   |
+| OWNER: mis publicaciones      | UI + API + security               | OWNER ve sólo sus listings                                                          | UI + API/ownership implementados en R3                                                | —        |
+| OWNER: draft CRUD             | UI + API + persistence            | OWNER crea, edita y elimina un DRAFT propio                                         | UI + API implementados en R3                                                          | —        |
+| OWNER: imágenes               | UI + API + storage                | OWNER sube, lista, ordena y elimina imágenes con errores recuperables               | UI + API/storage/validación implementados en R3                                       | —        |
+| OWNER: revisión               | UI + API                          | OWNER envía a revisión, ve estados y puede corregir rechazo                         | UI + API/lifecycle implementados en R3                                                | —        |
+| OWNER: disponibilidad         | UI + API                          | OWNER cambia disponibilidad y reconfirma; el cambio se refleja públicamente         | UI + API implementados en R3; integración pública queda para R5                       | R5       |
 | ADMIN: login y cola           | UI + API + security               | ADMIN accede a cola y detalle de revisión                                           | API/roles existentes; UI missing                                                      | R4       |
 | ADMIN: moderación/publicación | UI + API + audit                  | ADMIN aprueba, rechaza con razón y publica; la acción queda auditable               | API/audit existentes; UI missing                                                      | R4       |
 | ADMIN: flujo asistido         | UI + API + audit                  | ADMIN opera el flujo asistido sobre reglas existentes                               | API/audit existentes; UI missing                                                      | R4       |
@@ -74,6 +76,6 @@ se consideran probados por unit tests aislados o por endpoints no recorridos.
 ## Riesgos abiertos de R0
 
 - Falta el Design Package completo como artefacto versionado.
-- Los journeys integrados, OWNER autoservicio y ADMIN siguen pendientes de R3–R5.
+- Los journeys integrados, ADMIN y la validación E2E siguen pendientes de R4–R5.
 - R2 demuestra superficies públicas aisladas; la evidencia integrada contra DB/storage reales queda para R5.
 - Producción, release, hosting y outreach permanecen fuera de alcance.

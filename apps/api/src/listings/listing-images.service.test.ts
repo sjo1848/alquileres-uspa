@@ -55,7 +55,11 @@ describe('ListingsService images', () => {
     prisma.listingImage.findMany.mockResolvedValue([]);
     await service.listImages('owner-a', 'listing-a');
     expect(prisma.listing.findFirst).toHaveBeenCalledWith({
-      where: { id: 'listing-a', ownerId: 'owner-a', status: 'DRAFT' },
+      where: {
+        id: 'listing-a',
+        ownerId: 'owner-a',
+        status: { in: ['DRAFT', 'REJECTED'] },
+      },
       select: { id: true },
     });
   });

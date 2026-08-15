@@ -55,7 +55,11 @@ describe('ListingsService ownership', () => {
     (prisma as any).listing.findFirst.mockResolvedValue(listing);
     await service.update('owner-a', 'l1', { title: 'x' });
     expect((prisma as any).listing.updateMany).toHaveBeenCalledWith({
-      where: { id: 'l1', ownerId: 'owner-a', status: 'DRAFT' },
+      where: {
+        id: 'l1',
+        ownerId: 'owner-a',
+        status: { in: ['DRAFT', 'REJECTED'] },
+      },
       data: { title: 'x' },
     });
   });
@@ -99,7 +103,11 @@ describe('ListingsService ownership', () => {
     (prisma as any).listing.deleteMany.mockResolvedValue({ count: 1 });
     await service.remove('owner-a', 'l1');
     expect((prisma as any).listing.deleteMany).toHaveBeenCalledWith({
-      where: { id: 'l1', ownerId: 'owner-a', status: 'DRAFT' },
+      where: {
+        id: 'l1',
+        ownerId: 'owner-a',
+        status: { in: ['DRAFT', 'REJECTED'] },
+      },
     });
   });
 
@@ -170,7 +178,11 @@ describe('ListingsService ownership', () => {
       NotFoundException,
     );
     expect((prisma as any).listing.deleteMany).toHaveBeenCalledWith({
-      where: { id: 'l1', ownerId: 'owner-a', status: 'DRAFT' },
+      where: {
+        id: 'l1',
+        ownerId: 'owner-a',
+        status: { in: ['DRAFT', 'REJECTED'] },
+      },
     });
   });
 

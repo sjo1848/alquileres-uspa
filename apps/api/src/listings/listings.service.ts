@@ -390,7 +390,11 @@ export class ListingsService {
     input: UpdateListingDto,
   ) {
     const result = await db.listing.updateMany({
-      where: { id, ownerId, status: ListingStatus.DRAFT },
+      where: {
+        id,
+        ownerId,
+        status: { in: [ListingStatus.DRAFT, ListingStatus.REJECTED] },
+      },
       data: input,
     });
     if (result.count === 0) throw new NotFoundException('Listing not found');
@@ -639,7 +643,11 @@ export class ListingsService {
         deleted.push(backup);
       }
       const result = await db.listing.deleteMany({
-        where: { id, ownerId, status: ListingStatus.DRAFT },
+        where: {
+          id,
+          ownerId,
+          status: { in: [ListingStatus.DRAFT, ListingStatus.REJECTED] },
+        },
       });
       if (result.count !== 1) throw new NotFoundException('Listing not found');
       return deleted;
@@ -853,7 +861,11 @@ export class ListingsService {
     listingId: string,
   ) {
     const listing = await db.listing.findFirst({
-      where: { id: listingId, ownerId, status: ListingStatus.DRAFT },
+      where: {
+        id: listingId,
+        ownerId,
+        status: { in: [ListingStatus.DRAFT, ListingStatus.REJECTED] },
+      },
       select: { id: true },
     });
     if (!listing) throw new NotFoundException('Listing not found');
