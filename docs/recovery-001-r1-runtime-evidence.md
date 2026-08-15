@@ -1,6 +1,6 @@
 # RECOVERY-001 R1 — evidencia runtime
 
-Referencia: `recovery-001-r1-frontend-foundation@b2e449a` (HEAD verificado el
+Referencia: `recovery-001-r1-frontend-foundation@7290444` (HEAD verificado el
 2026-08-14).
 
 Entorno reproducible: API compilada desde ese HEAD, `NODE_ENV=test`, puerto

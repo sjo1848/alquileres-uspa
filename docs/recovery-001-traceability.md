@@ -1,6 +1,6 @@
 # RECOVERY-001 — contrato observable y trazabilidad compacta
 
-Estado de referencia: `recovery-001-r1-frontend-foundation@b2e449a`.
+Estado de referencia: `recovery-001-r1-frontend-foundation@7290444`.
 
 Este documento es el rebaseline compacto de RECOVERY-001. Traza únicamente
 capacidades visibles, externamente observables, integradas o de riesgo
