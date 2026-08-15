@@ -6,6 +6,11 @@ export type SessionStatus =
 const status = ref<SessionStatus>('unknown');
 const user = ref<User | null>(null);
 let restorePromise: Promise<void> | undefined;
+let onSessionExpired: (() => void) | undefined;
+
+export function setSessionExpiredHandler(handler: (() => void) | undefined) {
+  onSessionExpired = handler;
+}
 
 export function useSession() {
   const isAuthenticated = computed(
@@ -64,7 +69,10 @@ export function useSession() {
     try {
       return await request<T>(path, options);
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) clear();
+      if (error instanceof ApiError && error.status === 401) {
+        clear();
+        onSessionExpired?.();
+      }
       throw error;
     }
   }

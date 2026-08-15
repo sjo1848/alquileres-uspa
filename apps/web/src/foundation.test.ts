@@ -1,13 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, publicListingPath, request } from './api';
-import { useSession } from './session';
+import { setSessionExpiredHandler, useSession } from './session';
 import {
   canEditListing,
   createMutationOwnership,
   createSelectionGuard,
 } from './views/area-helpers';
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  setSessionExpiredHandler(undefined);
+  vi.restoreAllMocks();
+});
 
 describe('web foundation', () => {
   it('rejects stale selection responses after a newer selection and invalidation', () => {
@@ -132,6 +135,34 @@ describe('web foundation', () => {
     await session.restore();
     expect(session.status.value).toBe('anonymous');
     expect(session.user.value).toBeNull();
+  });
+
+  it('clears the session and notifies the app when a protected request expires', async () => {
+    const expired = vi.fn();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ message: 'Unauthorized' }), {
+          status: 401,
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    setSessionExpiredHandler(expired);
+    const session = useSession();
+    session.anonymous();
+    await expect(session.apiRequest('/listings')).rejects.toEqual(
+      new ApiError(401, 'Unauthorized'),
+    );
+    expect(session.status.value).toBe('anonymous');
+    expect(session.user.value).toBeNull();
+    expect(expired).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/auth/logout'),
+      expect.objectContaining({ method: 'POST' }),
+    );
   });
 
   it('exposes recoverable restore errors and can retry', async () => {

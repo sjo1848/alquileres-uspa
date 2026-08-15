@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { useSession } from './session';
+import { setSessionExpiredHandler, useSession } from './session';
 import HomeView from './views/HomeView.vue';
 import AuthView from './views/AuthView.vue';
 import AreaView from './views/AreaView.vue';
@@ -29,6 +29,23 @@ export const router = createRouter({
       meta: { requiresAuth: true, role: 'ADMIN' },
     },
   ],
+});
+
+setSessionExpiredHandler(() => {
+  const returnPath = router.currentRoute.value.fullPath;
+  const safeReturnPath =
+    returnPath.startsWith('/') &&
+    !returnPath.startsWith('//') &&
+    !returnPath.startsWith('/auth/')
+      ? returnPath
+      : undefined;
+  void router.replace({
+    path: '/auth/login',
+    query: {
+      expired: '1',
+      ...(safeReturnPath && { redirect: safeReturnPath }),
+    },
+  });
 });
 
 router.beforeEach(async (to) => {
