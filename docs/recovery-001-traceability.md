@@ -10,7 +10,7 @@ implementación pública de R2; la matriz sigue siendo un artefacto posterior y
 no está embebida en ese commit de código.
 
 Este documento es el rebaseline compacto de RECOVERY-001. R3 está implementado
-en la rama `recovery-001-r3-owner` y su baseline es estable para el alcance de
+en la rama `recovery-001-r3-owner` con baseline `65bf00a` para el alcance de
 autoservicio OWNER. R4, R5 y la integración E2E permanecen pendientes. Traza únicamente
 capacidades visibles, externamente observables, integradas o de riesgo
 material. No pretende enumerar DTOs, helpers ni decisiones internas.
