@@ -39,7 +39,7 @@ describe('web foundation', () => {
     expect(canEditListing('SUBMITTED')).toBe(false);
     expect(canEditListing('APPROVED')).toBe(false);
   });
-  it('builds assisted listing updates with editable fields only', () => {
+  it('builds assisted listing updates with exactly editable fields', () => {
     const listing = {
       id: 'listing-1',
       ownerId: 'owner-1',
@@ -55,13 +55,30 @@ describe('web foundation', () => {
       pricePerNight: 100,
       maxGuests: 4,
     };
-    expect(editableListingPayload(listing)).toEqual({
+    const payload = editableListingPayload(listing);
+
+    expect(Object.keys(payload).sort()).toEqual([
+      'description',
+      'location',
+      'maxGuests',
+      'pricePerNight',
+      'title',
+    ]);
+    expect(payload).toEqual({
       title: 'Casa',
       description: 'Descripción',
       location: 'Uspallata',
       pricePerNight: 100,
       maxGuests: 4,
     });
+    expect(payload).not.toHaveProperty('id');
+    expect(payload).not.toHaveProperty('ownerId');
+    expect(payload).not.toHaveProperty('status');
+    expect(payload).not.toHaveProperty('publicationStatus');
+    expect(payload).not.toHaveProperty('availabilityStatus');
+    expect(payload).not.toHaveProperty('lastConfirmedAt');
+    expect(payload).not.toHaveProperty('updatedAt');
+    expect(payload).not.toHaveProperty('images');
   });
   it('keeps mutation ownership independent from selection invalidation', () => {
     const mutations = createMutationOwnership();
