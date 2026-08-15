@@ -444,71 +444,61 @@ onMounted(() => {
             Las imágenes se gestionan cuando la publicación está en borrador o
             fue rechazada.
           </p>
-          <input
-            id="listing-image-upload"
-            type="file"
-            aria-label="Seleccionar imagen para subir"
-            accept="image/jpeg,image/png,image/webp"
-            :disabled="
-              saving || imageBusy !== null || !canEditListing(selected.status)
-            "
-            @change="upload"
-          />
-          <p v-if="imagesLoading" role="status" aria-live="polite">
-            Cargando imágenes…
-          </p>
-          <p v-else-if="imageBusy" role="status" aria-live="polite">
-            {{
-              imageBusy === 'upload'
-                ? 'Subiendo imagen…'
-                : imageBusy === 'delete'
-                  ? 'Eliminando imagen…'
-                  : 'Actualizando orden…'
-            }}{{ imageBusyOriginal ? ` (${imageBusyOriginal})` : '' }}
-          </p>
-          <p v-else-if="canEditListing(selected.status) && !images.length">
-            No hay imágenes cargadas.
-          </p>
-          <ul v-else class="image-list" :aria-busy="imageBusy !== null">
-            <li v-for="image in images" :key="image.id">
-              <span>{{ image.position + 1 }}. {{ image.originalName }}</span
-              ><span
-                ><button
-                  type="button"
-                  :disabled="
-                    imageBusy !== null ||
-                    image.position === 0 ||
-                    !canEditListing(selected.status)
-                  "
-                  :aria-label="`Mover imagen ${image.originalName} (${image.id}) hacia arriba`"
-                  @click="moveImage(image, -1)"
+          <div v-if="canEditListing(selected.status)">
+            <input
+              id="listing-image-upload"
+              type="file"
+              aria-label="Seleccionar imagen para subir"
+              accept="image/jpeg,image/png,image/webp"
+              :disabled="saving || imageBusy !== null"
+              @change="upload"
+            />
+            <p v-if="imagesLoading" role="status" aria-live="polite">
+              Cargando imágenes…
+            </p>
+            <p v-else-if="imageBusy" role="status" aria-live="polite">
+              {{
+                imageBusy === 'upload'
+                  ? 'Subiendo imagen…'
+                  : imageBusy === 'delete'
+                    ? 'Eliminando imagen…'
+                    : 'Actualizando orden…'
+              }}{{ imageBusyOriginal ? ` (${imageBusyOriginal})` : '' }}
+            </p>
+            <p v-else-if="!images.length">No hay imágenes cargadas.</p>
+            <ul v-else class="image-list" :aria-busy="imageBusy !== null">
+              <li v-for="image in images" :key="image.id">
+                <span>{{ image.position + 1 }}. {{ image.originalName }}</span
+                ><span
+                  ><button
+                    type="button"
+                    :disabled="imageBusy !== null || image.position === 0"
+                    :aria-label="`Mover imagen ${image.originalName} (${image.id}) hacia arriba`"
+                    @click="moveImage(image, -1)"
+                  >
+                    ↑</button
+                  ><button
+                    type="button"
+                    :disabled="
+                      imageBusy !== null || image.position === images.length - 1
+                    "
+                    :aria-label="`Mover imagen ${image.originalName} (${image.id}) hacia abajo`"
+                    @click="moveImage(image, 1)"
+                  >
+                    ↓</button
+                  ><button
+                    type="button"
+                    class="secondary"
+                    :aria-label="`Borrar imagen ${image.originalName} (${image.id})`"
+                    :disabled="imageBusy !== null"
+                    @click="removeImage(image.id)"
+                  >
+                    Borrar
+                  </button></span
                 >
-                  ↑</button
-                ><button
-                  type="button"
-                  :disabled="
-                    imageBusy !== null ||
-                    image.position === images.length - 1 ||
-                    !canEditListing(selected.status)
-                  "
-                  :aria-label="`Mover imagen ${image.originalName} (${image.id}) hacia abajo`"
-                  @click="moveImage(image, 1)"
-                >
-                  ↓</button
-                ><button
-                  type="button"
-                  class="secondary"
-                  :aria-label="`Borrar imagen ${image.originalName} (${image.id})`"
-                  :disabled="
-                    imageBusy !== null || !canEditListing(selected.status)
-                  "
-                  @click="removeImage(image.id)"
-                >
-                  Borrar
-                </button></span
-              >
-            </li>
-          </ul>
+              </li>
+            </ul>
+          </div>
         </section>
         <section class="subsection actions">
           <button
