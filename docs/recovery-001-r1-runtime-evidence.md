@@ -15,8 +15,12 @@ escriben en archivos. Los placeholders de abajo no son credenciales utilizables.
 Comandos resumidos:
 
 ```bash
-export DB_PASSWORD=INVALID
-export JWT_SECRET=INVALID
+read -rsp 'DB_PASSWORD: ' DB_PASSWORD
+printf '\n'
+export DB_PASSWORD
+read -rsp 'JWT_SECRET: ' JWT_SECRET
+printf '\n'
+export JWT_SECRET
 
 docker run -d --name recovery-001-postgres \
   -e POSTGRES_DB=alquileres \
