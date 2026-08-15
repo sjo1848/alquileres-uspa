@@ -323,7 +323,7 @@ onMounted(() => {
         <p v-if="loading" role="status" aria-live="polite">Cargando cola…</p>
         <p v-else-if="!listings.length" class="empty-state" role="status">
           No hay publicaciones pendientes. Podés iniciar una asistencia si hay
-          un owner en la cola.
+          cuentas OWNER disponibles.
         </p>
         <button
           v-for="item in listings"
