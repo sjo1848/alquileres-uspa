@@ -915,7 +915,8 @@ export class ListingsService {
   ): Promise<T> {
     return this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`
-        SELECT pg_advisory_xact_lock(hashtextextended(${listingId}, 0))
+        SELECT 1
+        WHERE pg_advisory_xact_lock(hashtextextended(${listingId}, 0)) IS NULL
       `;
       return work(tx);
     });

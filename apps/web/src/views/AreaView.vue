@@ -53,6 +53,13 @@ const form = reactive({
 });
 const message = (e: unknown) =>
   e instanceof Error ? e.message : 'No pudimos completar la operación.';
+const editablePayload = () => ({
+  title: form.title,
+  description: form.description,
+  location: form.location,
+  pricePerNight: form.pricePerNight,
+  maxGuests: form.maxGuests,
+});
 function fill(item: Listing, internal = false) {
   if ((saving.value || imageBusy.value) && !internal) return;
   selectionGuard.invalidate();
@@ -112,7 +119,11 @@ async function create() {
   try {
     const item = await session.apiRequest<Listing>('/listings', {
       method: 'POST',
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        ...editablePayload(),
+        title: form.title || 'Nuevo borrador',
+        location: form.location || 'Uspallata',
+      }),
     });
     if (mutationOwnership.owns(mutation)) {
       listings.value.unshift(item);
@@ -139,7 +150,7 @@ async function save() {
   try {
     const item = await session.apiRequest<Listing>(`/listings/${listingId}`, {
       method: 'PATCH',
-      body: JSON.stringify(form),
+      body: JSON.stringify(editablePayload()),
     });
     if (selectionGuard.isCurrent(request, selected.value?.id)) {
       Object.assign(selected.value, item);
