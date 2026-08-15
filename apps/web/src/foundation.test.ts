@@ -1,10 +1,39 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, publicListingPath, request } from './api';
 import { useSession } from './session';
+import {
+  canEditListing,
+  createMutationOwnership,
+  createSelectionGuard,
+} from './views/area-helpers';
 
 afterEach(() => vi.restoreAllMocks());
 
 describe('web foundation', () => {
+  it('resets selection guards and rejects stale image responses', () => {
+    const guard = createSelectionGuard();
+    const first = guard.begin('one');
+    const second = guard.begin('two');
+    expect(guard.isCurrent(first, 'two')).toBe(false);
+    expect(guard.isCurrent(second, 'two')).toBe(true);
+    guard.invalidate();
+    expect(guard.isCurrent(second, 'two')).toBe(false);
+  });
+
+  it('allows image mutations only for editable owner statuses', () => {
+    expect(canEditListing('DRAFT')).toBe(true);
+    expect(canEditListing('REJECTED')).toBe(true);
+    expect(canEditListing('SUBMITTED')).toBe(false);
+    expect(canEditListing('APPROVED')).toBe(false);
+  });
+  it('keeps mutation ownership independent from selection invalidation', () => {
+    const mutations = createMutationOwnership();
+    const first = mutations.acquire();
+    expect(mutations.owns(first)).toBe(true);
+    const second = mutations.acquire();
+    expect(mutations.owns(first)).toBe(false);
+    expect(mutations.owns(second)).toBe(true);
+  });
   it('builds encoded public listing paths', () => {
     expect(publicListingPath('cabaña/uspa')).toBe(
       '/public/listings/caba%C3%B1a%2Fuspa',
