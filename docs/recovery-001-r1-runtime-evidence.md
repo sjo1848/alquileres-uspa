@@ -1,9 +1,10 @@
 # RECOVERY-001 R1 — evidencia runtime
 
-Referencia: `recovery-001-r1-frontend-foundation@7290444` (HEAD verificado el
-2026-08-14).
+Runtime target = `b2e449a`, el commit que contiene el código R1 validado.
+Este documento fue agregado posteriormente; no afirma que existiera en ese
+commit.
 
-Entorno reproducible: API compilada desde ese HEAD, `NODE_ENV=test`, puerto
+Entorno reproducible: API compilada desde ese commit, `NODE_ENV=test`, puerto
 `3301`, y PostgreSQL local aislado `recovery-001-postgres` en
 `localhost:55434`, con las 7 migraciones aplicadas. Se usó un email sintético
 `@example.test`, una contraseña efímera y un `JWT_SECRET` sólo en variables de

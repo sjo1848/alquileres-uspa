@@ -1,6 +1,9 @@
 # RECOVERY-001 — contrato observable y trazabilidad compacta
 
-Estado de referencia: `recovery-001-r1-frontend-foundation@7290444`.
+R1 implementation baseline = `b2e449a`.
+
+Esta matriz es un artefacto de trazabilidad posterior, revisado sobre el
+branch `recovery-001-r1-frontend-foundation`.
 
 Este documento es el rebaseline compacto de RECOVERY-001. Traza únicamente
 capacidades visibles, externamente observables, integradas o de riesgo
