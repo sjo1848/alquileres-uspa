@@ -5,6 +5,10 @@ R1 implementation baseline = `b2e449a`.
 Esta matriz es un artefacto de trazabilidad posterior, revisado sobre el
 branch `recovery-001-r1-frontend-foundation`.
 
+R2 implementation baseline = `903ecdb`. Las filas de BUSCADOR reflejan la
+implementación pública de R2; la matriz sigue siendo un artefacto posterior y
+no está embebida en ese commit de código.
+
 Este documento es el rebaseline compacto de RECOVERY-001. Traza únicamente
 capacidades visibles, externamente observables, integradas o de riesgo
 material. No pretende enumerar DTOs, helpers ni decisiones internas.
@@ -25,25 +29,25 @@ Estados usados: `EXISTING_BACKEND`, `RECOVERY_REQUIRED`, `NOT_APPLICABLE`.
 
 ## Matriz compacta
 
-| Requirement                   | Expected Surface                  | Acceptance                                                                          | Evidence in R1                                                                                                         | Recovery |
-| ----------------------------- | --------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------- |
-| BUSCADOR: catálogo y filtros  | UI + API                          | Un visitante filtra, pagina y ve resultados publicados                              | API pública; UI missing                                                                                                | R2       |
-| BUSCADOR: ficha               | UI + API + storage                | Un visitante abre una ficha con imágenes, datos públicos y estado de disponibilidad | Ficha y metadata API existentes; storage de gestión existente; entrega pública de bytes de imagen faltante; UI missing | R2       |
-| BUSCADOR: freshness           | UI + API                          | La ficha muestra disponibilidad y última confirmación según reglas aprobadas        | Backend existente; UI missing                                                                                          | R2       |
-| BUSCADOR: contacto            | UI + API + ContactEvent           | Un visitante envía contacto y recibe resultado visible                              | Endpoint/ContactEvent existentes; UI missing                                                                           | R2       |
-| OWNER: registro y login       | UI + API + persistence + security | Una persona crea cuenta OWNER, inicia sesión y conserva una sesión segura           | Registro OWNER, login, cookie HttpOnly, sesión y UI de auth implementados en R1                                        | —        |
-| OWNER: mis publicaciones      | UI + API + security               | OWNER ve sólo sus listings                                                          | API/ownership existentes; UI missing                                                                                   | R3       |
-| OWNER: draft CRUD             | UI + API + persistence            | OWNER crea, edita y elimina un DRAFT propio                                         | API existente; UI missing                                                                                              | R3       |
-| OWNER: imágenes               | UI + API + storage                | OWNER sube, lista, ordena y elimina imágenes con errores recuperables               | API/storage/validación existentes; UI missing                                                                          | R3       |
-| OWNER: revisión               | UI + API                          | OWNER envía a revisión, ve estados y puede corregir rechazo                         | API/lifecycle existentes; UI missing                                                                                   | R3       |
-| OWNER: disponibilidad         | UI + API                          | OWNER cambia disponibilidad y reconfirma; el cambio se refleja públicamente         | API existente; UI missing                                                                                              | R3, R5   |
-| ADMIN: login y cola           | UI + API + security               | ADMIN accede a cola y detalle de revisión                                           | API/roles existentes; UI missing                                                                                       | R4       |
-| ADMIN: moderación/publicación | UI + API + audit                  | ADMIN aprueba, rechaza con razón y publica; la acción queda auditable               | API/audit existentes; UI missing                                                                                       | R4       |
-| ADMIN: flujo asistido         | UI + API + audit                  | ADMIN opera el flujo asistido sobre reglas existentes                               | API/audit existentes; UI missing                                                                                       | R4       |
-| Transversal: estados UI       | UI                                | Pantallas reales exponen loading, empty, error y sesión expirada                    | Estados de auth implementados en R1; estados de journeys restantes pendientes                                          | R2–R5    |
-| Transversal: responsive/a11y  | UI                                | Journeys reales funcionan en desktop, mobile y teclado                              | Shell only                                                                                                             | R5       |
-| Transversal: integración      | UI + API + DB + storage           | Journeys OWNER→ADMIN→público funcionan con PostgreSQL/storage reales                | Unit tests y API aislada                                                                                               | R5       |
-| Transversal: seguridad        | security + UI/API                 | Auth server-side, ownership, roles y errores de sesión se verifican en journeys     | Foundation backend existente                                                                                           | R1, R5   |
+| Requirement                   | Expected Surface                  | Acceptance                                                                          | Evidence in R1                                                                        | Recovery |
+| ----------------------------- | --------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------- |
+| BUSCADOR: catálogo y filtros  | UI + API                          | Un visitante filtra, pagina y ve resultados publicados                              | Catálogo Vue, filtros y paginación; API pública implementados en R2                   | —        |
+| BUSCADOR: ficha               | UI + API + storage                | Un visitante abre una ficha con imágenes, datos públicos y estado de disponibilidad | Ficha Vue y endpoint público de bytes implementados en R2; no expone metadata interna | —        |
+| BUSCADOR: freshness           | UI + API                          | La ficha muestra disponibilidad y última confirmación según reglas aprobadas        | UI y API implementadas en R2                                                          | —        |
+| BUSCADOR: contacto            | UI + API + ContactEvent           | Un visitante envía contacto y recibe resultado visible                              | Formulario Vue, endpoint y feedback implementados en R2                               | —        |
+| OWNER: registro y login       | UI + API + persistence + security | Una persona crea cuenta OWNER, inicia sesión y conserva una sesión segura           | Registro OWNER, login, cookie HttpOnly, sesión y UI de auth implementados en R1       | —        |
+| OWNER: mis publicaciones      | UI + API + security               | OWNER ve sólo sus listings                                                          | API/ownership existentes; UI missing                                                  | R3       |
+| OWNER: draft CRUD             | UI + API + persistence            | OWNER crea, edita y elimina un DRAFT propio                                         | API existente; UI missing                                                             | R3       |
+| OWNER: imágenes               | UI + API + storage                | OWNER sube, lista, ordena y elimina imágenes con errores recuperables               | API/storage/validación existentes; UI missing                                         | R3       |
+| OWNER: revisión               | UI + API                          | OWNER envía a revisión, ve estados y puede corregir rechazo                         | API/lifecycle existentes; UI missing                                                  | R3       |
+| OWNER: disponibilidad         | UI + API                          | OWNER cambia disponibilidad y reconfirma; el cambio se refleja públicamente         | API existente; UI missing                                                             | R3, R5   |
+| ADMIN: login y cola           | UI + API + security               | ADMIN accede a cola y detalle de revisión                                           | API/roles existentes; UI missing                                                      | R4       |
+| ADMIN: moderación/publicación | UI + API + audit                  | ADMIN aprueba, rechaza con razón y publica; la acción queda auditable               | API/audit existentes; UI missing                                                      | R4       |
+| ADMIN: flujo asistido         | UI + API + audit                  | ADMIN opera el flujo asistido sobre reglas existentes                               | API/audit existentes; UI missing                                                      | R4       |
+| Transversal: estados UI       | UI                                | Pantallas reales exponen loading, empty, error y sesión expirada                    | Estados de auth implementados en R1; estados de journeys restantes pendientes         | R2–R5    |
+| Transversal: responsive/a11y  | UI                                | Journeys reales funcionan en desktop, mobile y teclado                              | Shell only                                                                            | R5       |
+| Transversal: integración      | UI + API + DB + storage           | Journeys OWNER→ADMIN→público funcionan con PostgreSQL/storage reales                | Unit tests y API aislada                                                              | R5       |
+| Transversal: seguridad        | security + UI/API                 | Auth server-side, ownership, roles y errores de sesión se verifican en journeys     | Foundation backend existente                                                          | R1, R5   |
 
 ## Journey gates
 
@@ -70,6 +74,6 @@ se consideran probados por unit tests aislados o por endpoints no recorridos.
 ## Riesgos abiertos de R0
 
 - Falta el Design Package completo como artefacto versionado.
-- Los journeys de catálogo, OWNER autoservicio, ADMIN e integración completa siguen fuera de R1.
-- La evidencia de R1 demuestra la fundación de auth en runtime; no sustituye los recorridos de producto de R2+.
+- Los journeys integrados, OWNER autoservicio y ADMIN siguen pendientes de R3–R5.
+- R2 demuestra superficies públicas aisladas; la evidencia integrada contra DB/storage reales queda para R5.
 - Producción, release, hosting y outreach permanecen fuera de alcance.
