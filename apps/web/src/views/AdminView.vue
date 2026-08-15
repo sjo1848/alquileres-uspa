@@ -524,8 +524,7 @@ onMounted(() => {
     <section class="card assisted-create">
       <h3>Crear publicación asistida</h3>
       <p v-if="!owners.length" class="notice">
-        Para proteger el alcance, elegí un owner que aparezca en la cola;
-        todavía no hay un directorio público de owners disponible.
+        No hay cuentas OWNER disponibles para crear una publicación asistida.
       </p>
       <form v-else @submit.prevent="assistedCreate">
         <label

@@ -44,9 +44,9 @@ Estados usados: `EXISTING_BACKEND`, `RECOVERY_REQUIRED`, `NOT_APPLICABLE`.
 | OWNER: imágenes               | UI + API + storage                | OWNER sube, lista, ordena y elimina imágenes con errores recuperables               | UI + API/storage/validación implementados en R3                                       | —        |
 | OWNER: revisión               | UI + API                          | OWNER envía a revisión, ve estados y puede corregir rechazo                         | UI + API/lifecycle implementados en R3                                                | —        |
 | OWNER: disponibilidad         | UI + API                          | OWNER cambia disponibilidad y reconfirma; el cambio se refleja públicamente         | UI + API implementados en R3; integración pública queda para R5                       | R5       |
-| ADMIN: login y cola           | UI + API + security               | ADMIN accede a cola y detalle de revisión                                           | API/roles existentes; UI missing                                                      | R4       |
-| ADMIN: moderación/publicación | UI + API + audit                  | ADMIN aprueba, rechaza con razón y publica; la acción queda auditable               | API/audit existentes; UI missing                                                      | R4       |
-| ADMIN: flujo asistido         | UI + API + audit                  | ADMIN opera el flujo asistido sobre reglas existentes                               | API/audit existentes; UI missing                                                      | R4       |
+| ADMIN: login y cola           | UI + API + security               | ADMIN accede a cola y detalle de revisión                                           | UI AdminView + API/roles implementados en R4                                          | —        |
+| ADMIN: moderación/publicación | UI + API + audit                  | ADMIN aprueba, rechaza con razón y publica; la acción queda auditable               | UI + API/audit implementados en R4                                                    | —        |
+| ADMIN: flujo asistido         | UI + API + audit                  | ADMIN opera el flujo asistido sobre reglas existentes                               | UI + API/audit implementados en R4                                                    | —        |
 | Transversal: estados UI       | UI                                | Pantallas reales exponen loading, empty, error y sesión expirada                    | Estados de auth implementados en R1; estados de journeys restantes pendientes         | R2–R5    |
 | Transversal: responsive/a11y  | UI                                | Journeys reales funcionan en desktop, mobile y teclado                              | Shell only                                                                            | R5       |
 | Transversal: integración      | UI + API + DB + storage           | Journeys OWNER→ADMIN→público funcionan con PostgreSQL/storage reales                | Unit tests y API aislada                                                              | R5       |
@@ -77,6 +77,7 @@ se consideran probados por unit tests aislados o por endpoints no recorridos.
 ## Riesgos abiertos de R0
 
 - Falta el Design Package completo como artefacto versionado.
-- Los journeys integrados, ADMIN y la validación E2E siguen pendientes de R4–R5.
+- Los journeys integrados y la validación E2E siguen pendientes de R5.
+- R4 implementation baseline: commit `24f447c` en la rama de recovery.
 - R2 demuestra superficies públicas aisladas; la evidencia integrada contra DB/storage reales queda para R5.
 - Producción, release, hosting y outreach permanecen fuera de alcance.
