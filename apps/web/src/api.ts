@@ -2,6 +2,7 @@ export type Role = 'OWNER' | 'ADMIN';
 export type User = { id: string; email: string; role: Role };
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+export const apiUrl = (path: string) => `${API_URL}${path}`;
 
 export class ApiError extends Error {
   constructor(
@@ -16,7 +17,7 @@ export async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(apiUrl(path), {
     credentials: 'include',
     ...options,
     headers: { 'Content-Type': 'application/json', ...options.headers },

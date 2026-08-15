@@ -13,7 +13,7 @@ body {
 header,
 main,
 footer {
-  width: min(100% - 2rem, 42rem);
+  width: min(100% - 2rem, 70rem);
   margin: auto;
 }
 header {
@@ -31,6 +31,86 @@ main {
   border-radius: 1rem;
   background: #fff;
   box-shadow: 0 1rem 3rem #17324d1a;
+}
+.hero {
+  padding: 1rem 0;
+}
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+.filters h3 {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.filters button {
+  min-height: 2.8rem;
+}
+.listing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+}
+.listing-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.listing-card h3,
+.listing-card p {
+  margin: 0.25rem 0;
+}
+.image-placeholder {
+  min-height: 8rem;
+  display: grid;
+  place-items: center;
+  background: #dcecf3;
+  border-radius: 0.6rem;
+  font-size: 3rem;
+}
+.button-link {
+  display: inline-block;
+  padding: 0.7rem;
+  color: #fff;
+  background: #145b8c;
+  border-radius: 0.4rem;
+  text-align: center;
+}
+.detail,
+.contact {
+  margin-top: 1rem;
+}
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+}
+.gallery img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  background: #dcecf3;
+}
+.status {
+  font-weight: 700;
+}
+.available,
+.success {
+  color: #146b3a;
+}
+.unavailable,
+.error {
+  color: #a32222;
+}
+textarea {
+  width: 100%;
+  font: inherit;
+  padding: 0.7rem;
+  border: 1px solid #8ea3b5;
+  border-radius: 0.4rem;
 }
 .session-state {
   max-width: 42rem;
@@ -104,6 +184,6 @@ footer {
   header,
   main,
   footer {
-    width: min(100% - 4rem, 42rem);
+    width: min(100% - 4rem, 70rem);
   }
 }

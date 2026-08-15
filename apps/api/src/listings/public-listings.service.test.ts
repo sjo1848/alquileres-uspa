@@ -5,6 +5,7 @@ import { ListingsService } from './listings.service.js';
 describe('public listings catalog', () => {
   const prisma = {
     listing: { findMany: vi.fn(), findFirst: vi.fn(), count: vi.fn() },
+    listingImage: { findFirst: vi.fn() },
   } as any;
   const service = new ListingsService(prisma, {} as any);
   const published = {
@@ -108,5 +109,27 @@ describe('public listings catalog', () => {
         },
       }),
     );
+  });
+
+  it('serves bytes only for an image belonging to a published listing', async () => {
+    const storage = { get: vi.fn().mockResolvedValue(Buffer.from('jpeg')) };
+    const imageService = new ListingsService(prisma, storage as any);
+    prisma.listingImage.findFirst.mockResolvedValue({
+      objectKey: 'listings/public-1/image-1.jpg',
+      contentType: 'image/jpeg',
+      sizeBytes: 4,
+    });
+    const result = await imageService.getPublicImage('public-1', 'image-1');
+    expect(prisma.listingImage.findFirst).toHaveBeenCalledWith({
+      where: expect.objectContaining({
+        id: 'image-1',
+        listingId: 'public-1',
+        listing: { status: 'APPROVED', publicationStatus: 'PUBLISHED' },
+      }),
+      select: { objectKey: true, contentType: true, sizeBytes: true },
+    });
+    expect(result.content).toEqual(Buffer.from('jpeg'));
+    expect(result).not.toHaveProperty('ownerId');
+    expect(result).not.toHaveProperty('objectKey');
   });
 });

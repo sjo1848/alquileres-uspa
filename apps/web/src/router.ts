@@ -3,11 +3,13 @@ import { useSession } from './session';
 import HomeView from './views/HomeView.vue';
 import AuthView from './views/AuthView.vue';
 import AreaView from './views/AreaView.vue';
+import ListingView from './views/ListingView.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', component: HomeView },
+    { path: '/listings/:id', component: ListingView },
     { path: '/auth/login', component: AuthView, props: { mode: 'login' } },
     {
       path: '/auth/registro',

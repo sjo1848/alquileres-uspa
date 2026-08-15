@@ -131,6 +131,26 @@ export class ListingsService {
     return this.toPublicListing(listing);
   }
 
+  async getPublicImage(listingId: string, imageId: string) {
+    const image = await this.prisma.listingImage.findFirst({
+      where: {
+        id: imageId,
+        listingId,
+        listing: {
+          status: ListingStatus.APPROVED,
+          publicationStatus: ListingPublicationStatus.PUBLISHED,
+        },
+      },
+      select: { objectKey: true, contentType: true, sizeBytes: true },
+    });
+    if (!image) throw new NotFoundException('Image not found');
+    return {
+      contentType: image.contentType,
+      sizeBytes: image.sizeBytes,
+      content: await this.imageStorage.get(image.objectKey),
+    };
+  }
+
   private toPublicListing(listing: {
     id: string;
     title: string;
