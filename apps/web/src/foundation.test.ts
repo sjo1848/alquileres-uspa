@@ -10,7 +10,7 @@ import {
 afterEach(() => vi.restoreAllMocks());
 
 describe('web foundation', () => {
-  it('resets selection guards and rejects stale image responses', () => {
+  it('rejects stale selection responses after a newer selection and invalidation', () => {
     const guard = createSelectionGuard();
     const first = guard.begin('one');
     const second = guard.begin('two');
@@ -18,6 +18,15 @@ describe('web foundation', () => {
     expect(guard.isCurrent(second, 'two')).toBe(true);
     guard.invalidate();
     expect(guard.isCurrent(second, 'two')).toBe(false);
+  });
+
+  it('does not accept a response for the right id when its request is older', () => {
+    const guard = createSelectionGuard();
+    const first = guard.begin('listing-1');
+    const second = guard.begin('listing-1');
+
+    expect(guard.isCurrent(first, 'listing-1')).toBe(false);
+    expect(guard.isCurrent(second, 'listing-1')).toBe(true);
   });
 
   it('allows image mutations only for editable owner statuses', () => {

@@ -4,6 +4,7 @@ import HomeView from './views/HomeView.vue';
 import AuthView from './views/AuthView.vue';
 import AreaView from './views/AreaView.vue';
 import ListingView from './views/ListingView.vue';
+import AdminView from './views/AdminView.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -24,8 +25,7 @@ export const router = createRouter({
     },
     {
       path: '/admin',
-      component: AreaView,
-      props: { area: 'ADMIN' },
+      component: AdminView,
       meta: { requiresAuth: true, role: 'ADMIN' },
     },
   ],

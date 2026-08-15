@@ -261,8 +261,73 @@ footer {
   display: grid;
   place-content: center;
 }
+.admin-area {
+  display: grid;
+  gap: 1rem;
+}
+.admin-layout {
+  display: grid;
+  grid-template-columns: minmax(15rem, 23rem) 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+.queue {
+  display: grid;
+  gap: 0.75rem;
+}
+.queue h3,
+.audit h3,
+.assisted-create h3 {
+  margin: 0;
+}
+.admin-detail {
+  border-left: 4px solid #8b4f12;
+  padding-left: 1rem;
+}
+.admin-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+.admin-gallery img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  background: #dcecf3;
+}
+.review-actions,
+.assisted-tools,
+.assisted-create,
+.audit {
+  display: grid;
+  gap: 0.75rem;
+}
+.audit-list {
+  display: grid;
+  gap: 0.6rem;
+}
+.audit-list article {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.75rem;
+  background: #f4f7fa;
+  border-radius: 0.4rem;
+}
+.audit-list time,
+.audit-list small {
+  color: #40566b;
+}
+select {
+  font: inherit;
+  padding: 0.7rem;
+  border: 1px solid #8ea3b5;
+  border-radius: 0.4rem;
+  background: white;
+}
 @media (max-width: 47.99rem) {
-  .owner-layout {
+  .owner-layout,
+  .admin-layout {
     grid-template-columns: 1fr;
   }
   .image-list li {
