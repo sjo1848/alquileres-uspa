@@ -44,6 +44,32 @@ const PUBLIC_LISTING_SELECT = {
   },
 } satisfies Prisma.ListingSelect;
 
+const ADMIN_LISTING_SELECT = {
+  id: true,
+  title: true,
+  description: true,
+  location: true,
+  pricePerNight: true,
+  maxGuests: true,
+  status: true,
+  publicationStatus: true,
+  availabilityStatus: true,
+  lastConfirmedAt: true,
+  rejectionReason: true,
+  updatedAt: true,
+  owner: { select: { id: true, email: true, role: true } },
+  images: {
+    orderBy: [{ position: 'asc' as const }, { id: 'asc' as const }],
+    select: {
+      id: true,
+      originalName: true,
+      contentType: true,
+      sizeBytes: true,
+      position: true,
+    },
+  },
+} satisfies Prisma.ListingSelect;
+
 const FRESHNESS_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 @Injectable()
@@ -131,6 +157,26 @@ export class ListingsService {
     return this.toPublicListing(listing);
   }
 
+  async getPublicImage(listingId: string, imageId: string) {
+    const image = await this.prisma.listingImage.findFirst({
+      where: {
+        id: imageId,
+        listingId,
+        listing: {
+          status: ListingStatus.APPROVED,
+          publicationStatus: ListingPublicationStatus.PUBLISHED,
+        },
+      },
+      select: { objectKey: true, contentType: true, sizeBytes: true },
+    });
+    if (!image) throw new NotFoundException('Image not found');
+    return {
+      contentType: image.contentType,
+      sizeBytes: image.sizeBytes,
+      content: await this.imageStorage.get(image.objectKey),
+    };
+  }
+
   private toPublicListing(listing: {
     id: string;
     title: string;
@@ -194,8 +240,61 @@ export class ListingsService {
   listForReview() {
     return this.prisma.listing.findMany({
       where: { status: ListingStatus.SUBMITTED },
-      orderBy: { updatedAt: 'asc' },
+      orderBy: [{ updatedAt: 'asc' }, { id: 'asc' }],
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        location: true,
+        pricePerNight: true,
+        maxGuests: true,
+        status: true,
+        publicationStatus: true,
+        availabilityStatus: true,
+        lastConfirmedAt: true,
+        rejectionReason: true,
+        updatedAt: true,
+        owner: { select: { id: true, email: true, role: true } },
+        images: {
+          orderBy: [{ position: 'asc' }, { id: 'asc' }],
+          select: {
+            id: true,
+            originalName: true,
+            contentType: true,
+            sizeBytes: true,
+            position: true,
+          },
+        },
+      },
     });
+  }
+
+  async getForAdmin(actor: AuthUser, id: string) {
+    this.assertAdmin(actor);
+    return this.getAdminListing(this.prisma, id);
+  }
+
+  listOwners(actor: AuthUser) {
+    this.assertAdmin(actor);
+    return this.prisma.user.findMany({
+      where: { role: 'OWNER' },
+      orderBy: { email: 'asc' },
+      select: { id: true, email: true, role: true },
+    });
+  }
+
+  async getAdminImage(actor: AuthUser, listingId: string, imageId: string) {
+    this.assertAdmin(actor);
+    const image = await this.prisma.listingImage.findFirst({
+      where: { id: imageId, listingId, listing: { owner: { role: 'OWNER' } } },
+      select: { objectKey: true, contentType: true, sizeBytes: true },
+    });
+    if (!image) throw new NotFoundException('Image not found');
+    return {
+      contentType: image.contentType,
+      sizeBytes: image.sizeBytes,
+      content: await this.imageStorage.get(image.objectKey),
+    };
   }
 
   async approve(actor: AuthUser, id: string) {
@@ -222,7 +321,7 @@ export class ListingsService {
           {},
           db,
         );
-        return current;
+        return this.getAdminListing(db, id);
       }
       if (listing.status !== ListingStatus.SUBMITTED)
         throw new ConflictException('Listing is not awaiting review');
@@ -241,7 +340,7 @@ export class ListingsService {
         {},
         db,
       );
-      return resultListing;
+      return this.getAdminListing(db, resultListing!.id);
     });
   }
 
@@ -270,7 +369,7 @@ export class ListingsService {
           {},
           db,
         );
-        return current;
+        return this.getAdminListing(db, id);
       }
       if (
         listing.status !== ListingStatus.APPROVED ||
@@ -300,7 +399,7 @@ export class ListingsService {
         {},
         db,
       );
-      return resultListing;
+      return this.getAdminListing(db, resultListing!.id);
     });
   }
 
@@ -332,7 +431,7 @@ export class ListingsService {
             {},
             db,
           );
-          return current;
+          return this.getAdminListing(db, id);
         }
         throw new ConflictException(
           'Listing already rejected with another reason',
@@ -355,7 +454,7 @@ export class ListingsService {
         {},
         db,
       );
-      return resultListing;
+      return this.getAdminListing(db, resultListing!.id);
     });
   }
 
@@ -370,7 +469,11 @@ export class ListingsService {
     input: UpdateListingDto,
   ) {
     const result = await db.listing.updateMany({
-      where: { id, ownerId, status: ListingStatus.DRAFT },
+      where: {
+        id,
+        ownerId,
+        status: { in: [ListingStatus.DRAFT, ListingStatus.REJECTED] },
+      },
       data: input,
     });
     if (result.count === 0) throw new NotFoundException('Listing not found');
@@ -399,7 +502,7 @@ export class ListingsService {
         {},
         db,
       );
-      return listing;
+      return this.getAdminListing(db, listing.id);
     });
   }
 
@@ -416,7 +519,7 @@ export class ListingsService {
         {},
         db,
       );
-      return result;
+      return this.getAdminListing(db, result!.id);
     });
   }
 
@@ -442,7 +545,7 @@ export class ListingsService {
         { availabilityStatus: input.availabilityStatus },
         db,
       );
-      return result;
+      return this.getAdminListing(db, result!.id);
     });
   }
 
@@ -459,7 +562,7 @@ export class ListingsService {
         {},
         db,
       );
-      return result;
+      return this.getAdminListing(db, result!.id);
     });
   }
 
@@ -476,7 +579,7 @@ export class ListingsService {
         {},
         db,
       );
-      return result;
+      return this.getAdminListing(db, result!.id);
     });
   }
 
@@ -486,6 +589,7 @@ export class ListingsService {
     try {
       return await this.withListingLock(id, async (db) => {
         const listing = await this.findAssistedListing(db, id);
+        const snapshot = await this.getAdminListing(db, id);
         deletedObjects = await this.removeOnDb(db, listing.ownerId, id);
         await this.auditListing(
           actor.id,
@@ -495,6 +599,7 @@ export class ListingsService {
           {},
           db,
         );
+        return snapshot;
       });
     } catch (error) {
       // This also covers errors raised after the callback, including a failed
@@ -544,6 +649,18 @@ export class ListingsService {
     });
     if (!listing || listing.owner?.role !== 'OWNER')
       throw new NotFoundException('Listing not found');
+    return listing;
+  }
+
+  private async getAdminListing(
+    db: PrismaService | Prisma.TransactionClient,
+    id: string,
+  ) {
+    const listing = await db.listing.findFirst({
+      where: { id, owner: { role: 'OWNER' } },
+      select: ADMIN_LISTING_SELECT,
+    });
+    if (!listing) throw new NotFoundException('Listing not found');
     return listing;
   }
 
@@ -619,7 +736,11 @@ export class ListingsService {
         deleted.push(backup);
       }
       const result = await db.listing.deleteMany({
-        where: { id, ownerId, status: ListingStatus.DRAFT },
+        where: {
+          id,
+          ownerId,
+          status: { in: [ListingStatus.DRAFT, ListingStatus.REJECTED] },
+        },
       });
       if (result.count !== 1) throw new NotFoundException('Listing not found');
       return deleted;
@@ -794,7 +915,8 @@ export class ListingsService {
   ): Promise<T> {
     return this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`
-        SELECT pg_advisory_xact_lock(hashtextextended(${listingId}, 0))
+        SELECT 1
+        WHERE pg_advisory_xact_lock(hashtextextended(${listingId}, 0)) IS NULL
       `;
       return work(tx);
     });
@@ -833,7 +955,11 @@ export class ListingsService {
     listingId: string,
   ) {
     const listing = await db.listing.findFirst({
-      where: { id: listingId, ownerId, status: ListingStatus.DRAFT },
+      where: {
+        id: listingId,
+        ownerId,
+        status: { in: [ListingStatus.DRAFT, ListingStatus.REJECTED] },
+      },
       select: { id: true },
     });
     if (!listing) throw new NotFoundException('Listing not found');

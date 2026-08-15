@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ListingsService } from './listings.service.js';
 
@@ -15,6 +19,7 @@ describe('ListingsService ownership', () => {
       deleteMany: vi.fn(),
       findUnique: vi.fn(),
     },
+    user: { findMany: vi.fn() },
     listingImage: { findMany: vi.fn() },
     $transaction: vi.fn(),
     $queryRaw: vi.fn(),
@@ -40,6 +45,53 @@ describe('ListingsService ownership', () => {
     );
   });
 
+  it('lists only safe OWNER directory fields for admins', async () => {
+    prisma.user.findMany.mockResolvedValue([
+      { id: 'owner-a', email: 'owner@test', role: 'OWNER' },
+    ]);
+    await expect(service.listOwners(admin)).resolves.toEqual([
+      { id: 'owner-a', email: 'owner@test', role: 'OWNER' },
+    ]);
+    expect(prisma.user.findMany).toHaveBeenCalledWith({
+      where: { role: 'OWNER' },
+      orderBy: { email: 'asc' },
+      select: { id: true, email: true, role: true },
+    });
+  });
+
+  it('lists review items with safe owner and image metadata only', async () => {
+    prisma.listing.findMany.mockResolvedValue([]);
+
+    await service.listForReview();
+
+    expect(prisma.listing.findMany).toHaveBeenCalledWith({
+      where: { status: 'SUBMITTED' },
+      orderBy: [{ updatedAt: 'asc' }, { id: 'asc' }],
+      select: expect.objectContaining({
+        owner: { select: { id: true, email: true, role: true } },
+        images: {
+          orderBy: [{ position: 'asc' }, { id: 'asc' }],
+          select: {
+            id: true,
+            originalName: true,
+            contentType: true,
+            sizeBytes: true,
+            position: true,
+          },
+        },
+      }),
+    });
+    const selection = prisma.listing.findMany.mock.calls[0][0].select;
+    expect(selection.owner.select).not.toHaveProperty('passwordHash');
+    expect(selection.images.select).not.toHaveProperty('objectKey');
+  });
+
+  it('rejects the owner directory for non-admins', async () => {
+    expect(() =>
+      service.listOwners({ ...admin, role: 'OWNER' as const }),
+    ).toThrow(ForbiddenException);
+  });
+
   it('queries only the authenticated owner listing and translates a miss', async () => {
     (prisma as any).listing.findFirst.mockResolvedValue(null);
     await expect(service.getMine('owner-a', 'l1')).rejects.toBeInstanceOf(
@@ -55,7 +107,11 @@ describe('ListingsService ownership', () => {
     (prisma as any).listing.findFirst.mockResolvedValue(listing);
     await service.update('owner-a', 'l1', { title: 'x' });
     expect((prisma as any).listing.updateMany).toHaveBeenCalledWith({
-      where: { id: 'l1', ownerId: 'owner-a', status: 'DRAFT' },
+      where: {
+        id: 'l1',
+        ownerId: 'owner-a',
+        status: { in: ['DRAFT', 'REJECTED'] },
+      },
       data: { title: 'x' },
     });
   });
@@ -99,7 +155,11 @@ describe('ListingsService ownership', () => {
     (prisma as any).listing.deleteMany.mockResolvedValue({ count: 1 });
     await service.remove('owner-a', 'l1');
     expect((prisma as any).listing.deleteMany).toHaveBeenCalledWith({
-      where: { id: 'l1', ownerId: 'owner-a', status: 'DRAFT' },
+      where: {
+        id: 'l1',
+        ownerId: 'owner-a',
+        status: { in: ['DRAFT', 'REJECTED'] },
+      },
     });
   });
 
@@ -170,7 +230,11 @@ describe('ListingsService ownership', () => {
       NotFoundException,
     );
     expect((prisma as any).listing.deleteMany).toHaveBeenCalledWith({
-      where: { id: 'l1', ownerId: 'owner-a', status: 'DRAFT' },
+      where: {
+        id: 'l1',
+        ownerId: 'owner-a',
+        status: { in: ['DRAFT', 'REJECTED'] },
+      },
     });
   });
 
@@ -244,7 +308,8 @@ describe('ListingsService ownership', () => {
   });
 
   it('makes approve, publish, and same-reason reject idempotent', async () => {
-    const current = { id: 'l1' };
+    const current = { id: 'l1', owner: { id: 'owner-a', role: 'OWNER' } };
+    (prisma as any).listing.findFirst.mockResolvedValue(current);
     (prisma as any).listing.findUnique
       .mockResolvedValueOnce({ status: 'APPROVED', owner: { role: 'OWNER' } })
       .mockResolvedValueOnce(current)
@@ -267,6 +332,14 @@ describe('ListingsService ownership', () => {
       service.reject(admin, 'l1', 'Falta información'),
     ).resolves.toBe(current);
     expect((prisma as any).listing.updateMany).not.toHaveBeenCalled();
+    expect((prisma as any).listing.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          owner: expect.anything(),
+          images: expect.anything(),
+        }),
+      }),
+    );
   });
 
   it('rejects a whitespace-only rejection reason', async () => {

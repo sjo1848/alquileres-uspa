@@ -38,6 +38,18 @@ export class AdminAuditService {
       where: listingId ? { listingId } : undefined,
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: 100,
+      select: {
+        id: true,
+        action: true,
+        entityType: true,
+        entityId: true,
+        listingId: true,
+        targetOwnerId: true,
+        metadata: true,
+        createdAt: true,
+        actor: { select: { id: true, email: true, role: true } },
+        targetOwner: { select: { id: true, email: true, role: true } },
+      },
     });
   }
 }

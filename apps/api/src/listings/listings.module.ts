@@ -3,7 +3,10 @@ import { AuthModule } from '../auth/auth.module.js';
 import { AdminAuditModule } from '../audit/admin-audit.module.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { ListingsController } from './listings.controller.js';
-import { AdminListingsController } from './admin-listings.controller.js';
+import {
+  AdminListingsController,
+  AdminOwnersController,
+} from './admin-listings.controller.js';
 import { PublicListingsController } from './public-listings.controller.js';
 import { ListingsService } from './listings.service.js';
 import {
@@ -16,6 +19,7 @@ import {
   controllers: [
     ListingsController,
     AdminListingsController,
+    AdminOwnersController,
     PublicListingsController,
   ],
   providers: [

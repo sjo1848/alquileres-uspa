@@ -9,7 +9,9 @@ import {
   Query,
   Req,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { Role } from '@prisma/client';
 import {
   IsEnum,
@@ -53,6 +55,24 @@ export class AdminListingsController {
   @Get('review') listForReview() {
     return this.listings.listForReview();
   }
+  @Get('audit') auditLog(@Query('listingId') listingId?: string) {
+    return this.listings.listAudit(listingId);
+  }
+  @Get(':id') get(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
+    return this.listings.getForAdmin(req.user!, id);
+  }
+  @Get(':id/images/:imageId') async image(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Param('imageId') imageId: string,
+    @Res() response: Response,
+  ) {
+    const image = await this.listings.getAdminImage(req.user!, id, imageId);
+    response.setHeader('Content-Type', image.contentType);
+    response.setHeader('Content-Length', image.sizeBytes);
+    response.setHeader('Cache-Control', 'private, no-store');
+    return response.send(image.content);
+  }
   @Post(':id/approve') async approve(
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
@@ -71,10 +91,6 @@ export class AdminListingsController {
     @Body() input: RejectListingDto,
   ) {
     return this.listings.reject(req.user!, id, input.reason);
-  }
-
-  @Get('audit') auditLog(@Query('listingId') listingId?: string) {
-    return this.listings.listAudit(listingId);
   }
 
   @Post('assisted') createAssisted(
@@ -120,5 +136,16 @@ export class AdminListingsController {
     @Param('id') id: string,
   ) {
     return this.listings.removeAssisted(req.user!, id);
+  }
+}
+
+@Controller('admin')
+@Roles(Role.ADMIN)
+@UseGuards(AuthGuard, RolesGuard)
+export class AdminOwnersController {
+  constructor(private readonly listings: ListingsService) {}
+
+  @Get('owners') owners(@Req() req: AuthenticatedRequest) {
+    return this.listings.listOwners(req.user!);
   }
 }
