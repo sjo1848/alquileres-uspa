@@ -33,7 +33,7 @@ pnpm dev
 
 The API exposes the foundation auth endpoints plus I02/I03/I04/I05/I06/I07:
 
-- `POST /auth/login`, `GET /auth/me`, `GET /auth/admin-check`
+- `POST /auth/register` (creates an OWNER), `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `GET /auth/admin-check`
 - `GET /listings` and `GET /listings/:id` (authenticated owner's listings)
 - `POST /listings`, `PATCH /listings/:id`, `DELETE /listings/:id`
 - `POST /listings/:id/submit` (owner; `DRAFT`/`REJECTED`, or idempotent `SUBMITTED`)
@@ -43,6 +43,12 @@ The API exposes the foundation auth endpoints plus I02/I03/I04/I05/I06/I07:
 - `GET /public/listings` and `GET /public/listings/:id` (public catalog and ficha)
 - `PATCH /listings/:id/availability` and `POST /listings/:id/reconfirm` (owner availability and freshness)
 - `POST /public/listings/:id/contact` (visitor direct contact)
+
+`POST /auth/register` and `POST /auth/login` set the `alquileres_session` session
+cookie with `HttpOnly`, `SameSite=Lax`, and a 15-minute lifetime. The browser
+uses that cookie for authenticated requests; `POST /auth/logout` clears it.
+Passwords, session tokens, and other secrets are never returned in API
+responses or committed to the repository.
 
 ## Availability and freshness (I06)
 
