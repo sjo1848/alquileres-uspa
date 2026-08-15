@@ -13,13 +13,25 @@ entorno del proceso; no se registran credenciales, tokens ni emails concretos.
 Comandos resumidos:
 
 ```bash
-docker compose up -d postgres
-DATABASE_URL='postgresql://...@localhost:55434/alquileres?schema=public' \
+docker run -d --name recovery-001-postgres \
+  -e POSTGRES_DB=alquileres \
+  -e POSTGRES_USER=alquileres \
+  -e POSTGRES_PASSWORD=recovery-001-synthetic-password \
+  -p 55434:5432 postgres:16-alpine
+
+until docker exec recovery-001-postgres pg_isready -U alquileres -d alquileres; do
+  sleep 1
+done
+
+DATABASE_URL='postgresql://alquileres:recovery-001-synthetic-password@localhost:55434/alquileres?schema=public' \
   pnpm --filter @alquileres/api prisma:deploy
-pnpm prisma:generate
+DATABASE_URL='postgresql://alquileres:recovery-001-synthetic-password@localhost:55434/alquileres?schema=public' \
+  pnpm prisma:generate
 pnpm build
-PORT=3301 DATABASE_URL='postgresql://...@localhost:55434/alquileres?schema=public' \
-  JWT_SECRET='<runtime-only>' NODE_ENV=test node apps/api/dist/main.js
+PORT=3301 \
+  DATABASE_URL='postgresql://alquileres:recovery-001-synthetic-password@localhost:55434/alquileres?schema=public' \
+  JWT_SECRET='recovery-001-synthetic-jwt-secret' NODE_ENV=test \
+  node apps/api/dist/main.js
 ```
 
 Resultados HTTP observados (valores sensibles redactados):
