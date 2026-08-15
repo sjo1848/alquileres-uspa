@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '../api';
 import { useSession } from '../session';
+import { safeLoginRedirect } from './auth-helpers';
 const props = defineProps<{ mode: 'login' | 'register' }>();
 const email = ref('');
 const password = ref('');
@@ -20,7 +21,13 @@ async function submit() {
       email.value,
       password.value,
     );
-    await router.push(session.role.value === 'ADMIN' ? '/admin' : '/owner');
+    const redirect =
+      props.mode === 'login'
+        ? safeLoginRedirect(route.query.redirect)
+        : undefined;
+    await router.push(
+      redirect ?? (session.role.value === 'ADMIN' ? '/admin' : '/owner'),
+    );
   } catch (e) {
     error.value =
       e instanceof ApiError ? e.message : 'No se pudo completar la operación';
