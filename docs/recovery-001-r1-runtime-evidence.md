@@ -9,28 +9,33 @@ Entorno reproducible: API compilada desde ese commit, `NODE_ENV=test`, puerto
 `localhost:55434`, con las 7 migraciones aplicadas. Se usó un email sintético
 `@example.test`, una contraseña efímera y un `JWT_SECRET` sólo en variables de
 entorno del proceso; no se registran credenciales, tokens ni emails concretos.
+Los valores se inyectan únicamente por el entorno de ejecución y no se
+escriben en archivos. Los placeholders de abajo no son credenciales utilizables.
 
 Comandos resumidos:
 
 ```bash
+export DB_PASSWORD=INVALID
+export JWT_SECRET=INVALID
+
 docker run -d --name recovery-001-postgres \
   -e POSTGRES_DB=alquileres \
   -e POSTGRES_USER=alquileres \
-  -e POSTGRES_PASSWORD=recovery-001-synthetic-password \
+  -e POSTGRES_PASSWORD="$DB_PASSWORD" \
   -p 55434:5432 postgres:16-alpine
 
 until docker exec recovery-001-postgres pg_isready -U alquileres -d alquileres; do
   sleep 1
 done
 
-DATABASE_URL='postgresql://alquileres:recovery-001-synthetic-password@localhost:55434/alquileres?schema=public' \
+DATABASE_URL="postgresql://alquileres:${DB_PASSWORD}@localhost:55434/alquileres?schema=public" \
   pnpm --filter @alquileres/api prisma:deploy
-DATABASE_URL='postgresql://alquileres:recovery-001-synthetic-password@localhost:55434/alquileres?schema=public' \
+DATABASE_URL="postgresql://alquileres:${DB_PASSWORD}@localhost:55434/alquileres?schema=public" \
   pnpm prisma:generate
 pnpm build
 PORT=3301 \
-  DATABASE_URL='postgresql://alquileres:recovery-001-synthetic-password@localhost:55434/alquileres?schema=public' \
-  JWT_SECRET='recovery-001-synthetic-jwt-secret' NODE_ENV=test \
+  DATABASE_URL="postgresql://alquileres:${DB_PASSWORD}@localhost:55434/alquileres?schema=public" \
+  JWT_SECRET="$JWT_SECRET" NODE_ENV=test \
   node apps/api/dist/main.js
 ```
 
