@@ -7,6 +7,14 @@ import {
   createMutationOwnership,
   createSelectionGuard,
 } from './area-helpers';
+import {
+  contactListingTitle,
+  formatContactDate,
+  nextContactState,
+  normalizeContactEvents,
+  type ContactEvent,
+  type ContactEventsResponse,
+} from './contact-helpers';
 
 type Status = 'DRAFT' | 'SUBMITTED' | 'REJECTED' | 'APPROVED';
 type Availability = 'AVAILABLE' | 'UNAVAILABLE';
@@ -42,6 +50,11 @@ const imageBusy = ref<'upload' | 'delete' | 'reorder' | null>(null);
 const imageBusyOriginal = ref<string | null>(null);
 const error = ref('');
 const notice = ref('');
+const contactEvents = ref<ContactEvent[]>([]);
+const contactUnreadCount = ref(0);
+const contactsLoading = ref(false);
+const contactsError = ref('');
+const contactBusyId = ref<string | null>(null);
 const selectionGuard = createSelectionGuard();
 const mutationOwnership = createMutationOwnership();
 const form = reactive({
@@ -53,6 +66,48 @@ const form = reactive({
 });
 const message = (e: unknown) =>
   e instanceof Error ? e.message : 'No pudimos completar la operación.';
+const contactMessage = (e: unknown) =>
+  e instanceof Error ? e.message : 'No pudimos cargar las consultas.';
+async function loadContactEvents() {
+  contactsLoading.value = true;
+  contactsError.value = '';
+  try {
+    const result = await session.apiRequest<ContactEventsResponse>(
+      '/owner/contact-events',
+    );
+    const normalized = normalizeContactEvents(result);
+    contactEvents.value = normalized.items;
+    contactUnreadCount.value = normalized.unreadCount;
+  } catch (e) {
+    contactsError.value = contactMessage(e);
+  } finally {
+    contactsLoading.value = false;
+  }
+}
+async function updateContactState(event: ContactEvent) {
+  if (contactBusyId.value) return;
+  const nextState = nextContactState(event.state);
+  contactBusyId.value = event.id;
+  contactsError.value = '';
+  try {
+    const result = await session.apiRequest<ContactEvent>(
+      `/owner/contact-events/${encodeURIComponent(event.id)}/state`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ state: nextState }),
+      },
+    );
+    const updatedState = result?.state === 'READ' ? 'READ' : nextState;
+    event.state = updatedState;
+    contactUnreadCount.value = contactEvents.value.filter(
+      (item) => item.state === 'UNREAD',
+    ).length;
+  } catch (e) {
+    contactsError.value = contactMessage(e);
+  } finally {
+    contactBusyId.value = null;
+  }
+}
 const editablePayload = () => ({
   title: form.title,
   description: form.description,
@@ -338,7 +393,10 @@ async function deleteSelected() {
   );
 }
 onMounted(() => {
-  if (props.area === 'OWNER') void load();
+  if (props.area === 'OWNER') {
+    void load();
+    void loadContactEvents();
+  }
 });
 </script>
 <template>
@@ -364,6 +422,104 @@ onMounted(() => {
         Cerrar sesión
       </button>
     </div>
+    <section class="card contacts-section" aria-labelledby="contacts-title">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">Atención de visitantes</p>
+          <h3 id="contacts-title">Consultas</h3>
+        </div>
+        <span class="unread-badge" aria-label="Consultas sin leer">
+          {{ contactUnreadCount }} sin leer
+        </span>
+      </div>
+      <p class="contacts-retention">
+        Las consultas se conservan durante 180 días.
+      </p>
+      <p v-if="contactsError" class="error" role="alert">
+        {{ contactsError }}
+        <button
+          class="inline-retry secondary"
+          type="button"
+          @click="loadContactEvents"
+        >
+          Reintentar
+        </button>
+      </p>
+      <p
+        v-if="contactsLoading"
+        class="empty-state"
+        aria-busy="true"
+        role="status"
+      >
+        Cargando consultas…
+      </p>
+      <p
+        v-else-if="!contactsError && !contactEvents.length"
+        class="empty-state"
+        role="status"
+      >
+        Todavía no recibiste consultas.
+      </p>
+      <div v-else-if="!contactsError" class="contact-list">
+        <article
+          v-for="contact in contactEvents"
+          :key="contact.id"
+          class="contact-card"
+          :class="{ unread: contact.state === 'UNREAD' }"
+        >
+          <div class="contact-card-heading">
+            <div>
+              <h4>{{ contactListingTitle(contact) }}</h4>
+              <p class="contact-meta">
+                <time :datetime="contact.createdAt">{{
+                  formatContactDate(contact.createdAt)
+                }}</time>
+                <span v-if="contact.state === 'UNREAD'" class="state-pill"
+                  >Sin leer</span
+                >
+                <span v-else class="state-pill read">Leída</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              class="secondary contact-state-button"
+              :disabled="contactBusyId !== null"
+              :aria-label="
+                contact.state === 'UNREAD'
+                  ? 'Marcar consulta como leída'
+                  : 'Restaurar consulta como sin leer'
+              "
+              @click="updateContactState(contact)"
+            >
+              {{
+                contact.state === 'UNREAD'
+                  ? 'Marcar como leída'
+                  : 'Restaurar sin leer'
+              }}
+            </button>
+          </div>
+          <dl class="contact-details">
+            <div>
+              <dt>Visitante</dt>
+              <dd>{{ contact.visitorName }}</dd>
+            </div>
+            <div>
+              <dt>Email</dt>
+              <dd>
+                <a :href="`mailto:${contact.visitorEmail}`">{{
+                  contact.visitorEmail
+                }}</a>
+              </dd>
+            </div>
+            <div v-if="contact.listing?.location">
+              <dt>Ubicación</dt>
+              <dd>{{ contact.listing.location }}</dd>
+            </div>
+          </dl>
+          <p class="contact-message">{{ contact.message }}</p>
+        </article>
+      </div>
+    </section>
     <p v-if="error" class="error" role="alert">{{ error }}</p>
     <p v-if="notice" class="success" role="status">{{ notice }}</p>
     <div v-if="loading" class="card" aria-busy="true">

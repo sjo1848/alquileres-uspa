@@ -29,6 +29,11 @@ enum ListingAvailabilityStatus {
   UNAVAILABLE
 }
 
+enum ContactEventState {
+  UNREAD
+  READ
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -94,12 +99,14 @@ model ContactEvent {
   visitorName   String   @map("visitor_name")
   visitorEmail  String   @map("visitor_email")
   message       String
+  state         ContactEventState @default(UNREAD)
   createdAt     DateTime @default(now()) @map("created_at")
   listing       Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
   owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([listingId, createdAt])
   @@index([ownerId, createdAt])
+  @@index([ownerId, state, createdAt])
   @@map("contact_events")
 }
 

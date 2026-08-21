@@ -184,6 +184,103 @@ footer {
   display: grid;
   gap: 1rem;
 }
+.contacts-section {
+  display: grid;
+  gap: 0.75rem;
+}
+.contacts-section h3 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+.contacts-retention,
+.contact-meta {
+  margin: 0;
+  color: #40566b;
+}
+.unread-badge,
+.state-pill {
+  display: inline-block;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: #f4e7cf;
+  color: #6e3d0c;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.state-pill.read {
+  background: #e5edf1;
+  color: #40566b;
+}
+.contact-list {
+  display: grid;
+  gap: 0.75rem;
+}
+.contact-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #c9d5df;
+  border-radius: 0.65rem;
+  background: #fdfefe;
+}
+.contact-card.unread {
+  border-left: 4px solid #8b4f12;
+  background: #fffaf2;
+}
+.contact-card h4 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.contact-card-heading {
+  display: flex;
+  gap: 1rem;
+  align-items: start;
+  justify-content: space-between;
+}
+.contact-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+}
+.contact-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+.contact-details div {
+  min-width: 0;
+}
+.contact-details dt {
+  color: #40566b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.contact-details dd {
+  margin: 0.15rem 0 0;
+  overflow-wrap: anywhere;
+}
+.contact-message {
+  margin: 0;
+  padding: 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #f4f7fa;
+  border-radius: 0.4rem;
+}
+.contact-state-button {
+  flex: 0 0 auto;
+  padding: 0.55rem 0.7rem;
+}
+.inline-retry {
+  margin-left: 0.5rem;
+  padding: 0.35rem 0.55rem;
+}
 .page-heading,
 .status-line,
 .actions,
@@ -317,6 +414,26 @@ footer {
 .audit-list time,
 .audit-list small {
   color: #40566b;
+}
+@media (max-width: 640px) {
+  header,
+  main,
+  footer {
+    width: min(100% - 1rem, 70rem);
+  }
+  .card {
+    padding: 1rem;
+  }
+  .contact-card-heading {
+    flex-direction: column;
+  }
+  .contact-state-button {
+    width: 100%;
+  }
+  .owner-layout,
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
 }
 select {
   font: inherit;
