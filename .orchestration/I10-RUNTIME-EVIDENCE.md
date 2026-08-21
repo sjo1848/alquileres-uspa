@@ -13,6 +13,13 @@ Repository: `/home/sjo1848/dev/alquileres-uspa`
 
 Base product commit: `63748c09f20418e0ba1097ae036e8aa49db29c77`
 
+Acceptance candidate branch: `i10-owner-lead-inbox-acceptance`
+
+Acceptance candidate commit: `b464bcb270c034a45d062d80c3a6921bcb450c8c`
+
+All technical evidence below corresponds to the I10 implementation in that
+candidate commit; the later metadata checkpoint does not change product code.
+
 I10 working tree changes are the files shown by `git status --short`; no
 feature outside the approved contract was changed.
 

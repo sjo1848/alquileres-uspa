@@ -6,7 +6,15 @@ Date: 2026-08-21
 
 Repository: `/home/sjo1848/dev/alquileres-uspa`
 
-Canonical checkout: `main` at `63748c09f20418e0ba1097ae036e8aa49db29c77`
+Canonical checkout for the acceptance candidate: branch
+`i10-owner-lead-inbox-acceptance` at
+`b464bcb270c034a45d062d80c3a6921bcb450c8c` (base
+`63748c09f20418e0ba1097ae036e8aa49db29c77`).
+
+Method rule: `PRODUCT_ACCEPTANCE_READY` requires a durable, reproducible
+candidate normally identified by commit SHA. Working-tree fingerprints are
+valid BUILD evidence, but are not sufficient as the final Human Product
+Acceptance candidate.
 
 The discovery Human Gate was approved on 2026-08-21. I10 was implemented
 without expanding scope. Current execution state and evidence are in

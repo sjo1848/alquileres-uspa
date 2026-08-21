@@ -6,6 +6,10 @@ This is a manual product review checkpoint. Automated tests and technical
 critics do not constitute Product Acceptance. Only Sebastián can issue the
 final PASS/FAIL.
 
+Acceptance candidate branch: `i10-owner-lead-inbox-acceptance`
+
+Acceptance candidate commit: `b464bcb270c034a45d062d80c3a6921bcb450c8c`
+
 ## Local runtime
 
 - Web: `http://127.0.0.1:5174`

@@ -6,6 +6,13 @@ Repository: `/home/sjo1848/dev/alquileres-uspa`
 
 Base commit: `63748c09f20418e0ba1097ae036e8aa49db29c77`
 
+Acceptance candidate branch: `i10-owner-lead-inbox-acceptance`
+Acceptance candidate commit: `b464bcb270c034a45d062d80c3a6921bcb450c8c`
+
+`PRODUCT_ACCEPTANCE_READY` requires a durable, reproducible candidate,
+normally identified by commit SHA. A working-tree fingerprint is BUILD
+evidence only and is not sufficient for Human Product Acceptance.
+
 ## Current product
 
 Public catalog, listing detail/images, availability/freshness, visitor contact
