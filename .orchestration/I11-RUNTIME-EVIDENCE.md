@@ -1,8 +1,9 @@
 # I11 runtime evidence and continuation checkpoint
 
-Status: `READY_FOR_I11_HUMAN_PRODUCT_ACCEPTANCE`
+Status: `PRODUCT_ACCEPTED`
 Implementation base: `0fb88d2c75984904f340cc669d42ec7d23ebb85c`
 Candidate SHA: `d378b83aa4fb6c23f0fa74908458fe299e63037f`
+Canonical closure SHA: `8c5c0448838dbc5eca7bc37804d9ec33b284512a`
 
 ## Contract and implementation
 
@@ -44,6 +45,7 @@ deployment and production infrastructure.
 | `pnpm migration:evidence` | PASS; legacy fixture inserted before I11 SQL, nullable/no-default/cleanup verified |
 | `pnpm i11:integration` | PASS; default catalog, opt-in filter, OWNER confirmation/reconfirm and contact regression |
 | Browser journey | PASS for catalog, filter empty/reset, unavailable visibility, detail, empty gallery and contact feedback |
+| Human Product Acceptance | PASS — catalog states, default visibility, opt-in filter/reset, consistency, OWNER reconfirmation/change, contact regression and mobile; zero new findings |
 
 The migration evidence runner is `scripts/i11-migration-evidence.mjs`. It
 constructs an isolated schema by applying migrations before I11, inserts a
@@ -106,6 +108,10 @@ REWORK loops:
 3. Rebuilt migration evidence so I11 SQL is applied once after a legacy fixture,
    and integrated it into CI.
 4. Added reproducible synthetic seed and vertical I11 integration runner.
+
+I11 is canonically closed on main at `8c5c0448838dbc5eca7bc37804d9ec33b284512a`.
+Post-closure CI for the canonical checkpoint passed (GitHub Actions run
+`32600815258`). No deployment or production-eligibility claim was made.
 
 Known non-blocking debt remains outside I11: 180-day ContactEvent deletion is
 not automated; CSRF and public-contact abuse/rate-limit concerns remain in the

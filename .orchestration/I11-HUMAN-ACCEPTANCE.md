@@ -1,7 +1,9 @@
 # I11 Human Product Acceptance preparation
 
-Status: `READY_FOR_I11_HUMAN_PRODUCT_ACCEPTANCE`
-Candidate SHA: `d378b83aa4fb6c23f0fa74908458fe299e63037f`
+Status: `PRODUCT_ACCEPTED`
+Accepted candidate SHA: `d378b83aa4fb6c23f0fa74908458fe299e63037f`
+Canonical closure SHA: `8c5c0448838dbc5eca7bc37804d9ec33b284512a`
+Human Product Acceptance: `PASS` — 2026-08-22
 
 Use synthetic local data only.
 
@@ -44,5 +46,6 @@ DATABASE_URL='postgresql://alquileres:alquileres@localhost:55432/alquileres?sche
     (320–390px): readability, no horizontal scroll, focus, touch targets,
     retry and empty state.
 
-Human Product Acceptance is the only authority for `PRODUCT_ACCEPTED`. This
-file records preparation, not acceptance.
+Human Product Acceptance is the authority for `PRODUCT_ACCEPTED`. Sebastián
+verified all journeys above with no new blocking findings. Mobile was accepted
+for I11; no additional mobile debt was opened by this gate.
