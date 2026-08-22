@@ -402,7 +402,8 @@ blocking findings. I11 is canonically closed; implementation candidate
 `d378b83aa4fb6c23f0fa74908458fe299e63037f` was accepted and the orchestration
 closure is on `main` at `ed9b529945b6cc856e4bfafb383e486392cf3130`.
 Post-closure CI run `32603805950` passed. No deployment or production
-eligibility claim was made.
+eligibility claim was made. The final portable `main` checkpoint is
+`8bcdafbd947b9644c5db110a3b360b555c84f67a`.
 
 Post-I11 discovery is persisted in
 `.orchestration/NEXT-NATURAL-IMPROVEMENT-POST-I11.md` and ends at
