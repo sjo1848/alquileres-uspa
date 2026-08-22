@@ -359,3 +359,22 @@ OWNER authentication/inbox/state transitions, isolation and mobile acceptance
 passed. Mobile UX improvement remains explicit non-blocking debt; no more
 granular finding was supplied. The next permitted Project Method phase is
 discovery of the next natural improvement, ending at a new Human Gate.
+
+## 10. I10 canonical closure and next natural improvement discovery
+
+I10 was merged through PR #12 into `main` at
+`d2668443997a579d46539c10f62093c85410fdee`; canonical post-merge CI run
+`32598108629` passed (security, format, Prisma, migrations, lint, tests and
+build). No deployment or production-eligibility claim was made.
+
+The post-I10 discovery used two specialists and two independent critics, each
+spawned with separate prompts and `fork_context=false`. Their evidence,
+candidate matrix, component reuse decision, reconciliation REWORK and pending
+material Human decisions are persisted in
+`.orchestration/NEXT-NATURAL-IMPROVEMENT-DISCOVERY.md`.
+
+The recommendation is not “add more availability features”; it is the bounded
+proposal **truthful availability and freshness in the public catalog**. It
+requires Human authority for confirmation semantics and catalog treatment of
+unavailable/stale results. No feature implementation has begun. Current state:
+`READY_FOR_NEXT_NATURAL_IMPROVEMENT_HUMAN_GATE`.
