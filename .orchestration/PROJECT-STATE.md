@@ -7,7 +7,7 @@ Repository: `/home/sjo1848/dev/alquileres-uspa`
 Base commit: `63748c09f20418e0ba1097ae036e8aa49db29c77`
 
 Canonical branch: `main`
-Canonical HEAD: `8c5c0448838dbc5eca7bc37804d9ec33b284512a`
+Canonical HEAD: `ed9b529945b6cc856e4bfafb383e486392cf3130`
 
 `PRODUCT_ACCEPTANCE_READY` requires a durable, reproducible candidate,
 normally identified by commit SHA. A working-tree fingerprint is BUILD
