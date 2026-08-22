@@ -15,7 +15,7 @@ Base product commit: `63748c09f20418e0ba1097ae036e8aa49db29c77`
 
 Acceptance candidate branch: `i10-owner-lead-inbox-acceptance`
 
-Acceptance candidate commit: `a3471a9c5c6bd1269b8acde7ca79331c8d4b3d4d`
+Acceptance candidate commit: `a3471a9c01705299cea1b62367c4699d2bab1c01`
 
 All technical evidence below corresponds to the I10 implementation in that
 candidate commit; the later metadata checkpoint does not change product code.

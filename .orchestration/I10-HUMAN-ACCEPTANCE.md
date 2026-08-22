@@ -8,7 +8,7 @@ final PASS/FAIL.
 
 Acceptance candidate branch: `i10-owner-lead-inbox-acceptance`
 
-Acceptance candidate commit: `a3471a9c5c6bd1269b8acde7ca79331c8d4b3d4d`
+Acceptance candidate commit: `a3471a9c01705299cea1b62367c4699d2bab1c01`
 
 ## Local runtime
 
