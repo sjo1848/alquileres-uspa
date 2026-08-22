@@ -1,6 +1,6 @@
 # Canonical Project State — Alquileres Uspallata
 
-State: `I10_PRODUCT_ACCEPTED_CANONICAL_MAIN`
+State: `READY_FOR_NEXT_NATURAL_IMPROVEMENT_HUMAN_GATE`
 
 Repository: `/home/sjo1848/dev/alquileres-uspa`
 
@@ -71,5 +71,20 @@ logout/account switching, inbox access and invalid-session redirect.
 
 ## Continue from here
 
-I10 is closed. Reconstruct and prioritize the next natural product improvement;
-do not implement it before its Human Gate approval.
+I10 is closed and canonically integrated at
+`d2668443997a579d46539c10f62093c85410fdee`. Discovery is complete; the
+pending Human Gate is documented in
+`.orchestration/NEXT-NATURAL-IMPROVEMENT-DISCOVERY.md`.
+
+The recommended next increment is **truthful availability and freshness in the
+public catalog**, subject to material policy decisions about what counts as an
+OWNER confirmation and how `UNAVAILABLE`/`STALE` results behave in discovery.
+Do not implement it before approval.
+
+- The I10 follow-up email action remains a postponed, bounded UI
+  discoverability candidate: owner-scoped visitor email already exists as a
+  `mailto:` link; WhatsApp remains out of scope pending consent/data policy.
+- The 180-day ContactEvent retention target has no automated deletion and
+  remains an explicit enforcement gap. Cookie-authenticated state changes also
+  need a future CSRF review; neither debt is silently included in the proposed
+  product increment.
