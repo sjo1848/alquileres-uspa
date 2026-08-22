@@ -1,13 +1,13 @@
 # Canonical Project State — Alquileres Uspallata
 
-State: `READY_FOR_I11_HUMAN_PRODUCT_ACCEPTANCE`
+State: `READY_FOR_NEXT_NATURAL_IMPROVEMENT_HUMAN_GATE`
 
 Repository: `/home/sjo1848/dev/alquileres-uspa`
 
 Base commit: `63748c09f20418e0ba1097ae036e8aa49db29c77`
 
-Acceptance candidate branch: `i10-owner-lead-inbox-acceptance`
-Acceptance candidate commit: `a3471a9c01705299cea1b62367c4699d2bab1c01`
+Canonical branch: `main`
+Canonical HEAD: `8c5c0448838dbc5eca7bc37804d9ec33b284512a`
 
 `PRODUCT_ACCEPTANCE_READY` requires a durable, reproducible candidate,
 normally identified by commit SHA. A working-tree fingerprint is BUILD
@@ -91,16 +91,19 @@ Do not implement it before approval.
 
 ## I11 current state
 
-I11 — Truthful availability and freshness in the public catalog is implemented
-and awaiting Human Product Acceptance. Read, in order:
+I11 — Truthful availability and freshness in the public catalog is implemented,
+human accepted and canonically closed. Read, in order:
 
 1. `.orchestration/I11-TASK-CONTRACT.md`
 2. `.orchestration/I11-RUNTIME-EVIDENCE.md`
 3. `.orchestration/I11-HUMAN-ACCEPTANCE.md`
 
 I11 candidate SHA: `d378b83aa4fb6c23f0fa74908458fe299e63037f`.
+Human Product Acceptance: `PASS` with zero new blocking findings.
+Canonical closure SHA: `8c5c0448838dbc5eca7bc37804d9ec33b284512a`.
 
 The implementation makes `lastConfirmedAt` nullable and truthful, keeps
 unavailable/stale listings visible, adds opt-in `Solo disponibles`, aligns
 catalog/detail copy and preserves public contact. No next improvement is
-authorized.
+authorized; discovery is pending the next Human Gate in
+`.orchestration/NEXT-NATURAL-IMPROVEMENT-POST-I11.md`.

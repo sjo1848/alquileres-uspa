@@ -1,9 +1,11 @@
 # I11 Task Contract — Truthful availability and freshness
 
-Status: `IMPLEMENTED_PENDING_HUMAN_PRODUCT_ACCEPTANCE`
+Status: `PRODUCT_ACCEPTED`
 Approved at Human Gate: 2026-08-22
 Implementation base: `0fb88d2c75984904f340cc669d42ec7d23ebb85c`
 Durable candidate: `d378b83aa4fb6c23f0fa74908458fe299e63037f`
+Canonical closure SHA: `8c5c0448838dbc5eca7bc37804d9ec33b284512a`
+Human Product Acceptance: `PASS` — 2026-08-22; zero new blocking findings.
 Scope owner: Codex orchestrator
 
 Implementation evidence: `.orchestration/I11-RUNTIME-EVIDENCE.md`
