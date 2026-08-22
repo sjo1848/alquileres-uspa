@@ -1,6 +1,6 @@
 # PM-AUTONOMY-PORTABILITY-002 — Discovery, critique and prioritization
 
-Status: `READY_FOR_I10_HUMAN_PRODUCT_ACCEPTANCE`
+Status: `I10_PRODUCT_ACCEPTED_CANONICAL_MAIN`
 
 Date: 2026-08-21
 
@@ -354,4 +354,8 @@ The following decisions were approved on 2026-08-21:
 
 Technical implementation details were resolved autonomously.
 
-`READY_FOR_I10_HUMAN_PRODUCT_ACCEPTANCE`
+I10 Human Product Acceptance PASS was issued on 2026-08-22. Public inquiry,
+OWNER authentication/inbox/state transitions, isolation and mobile acceptance
+passed. Mobile UX improvement remains explicit non-blocking debt; no more
+granular finding was supplied. The next permitted Project Method phase is
+discovery of the next natural improvement, ending at a new Human Gate.

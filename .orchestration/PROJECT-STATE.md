@@ -1,6 +1,6 @@
 # Canonical Project State — Alquileres Uspallata
 
-State: `READY_FOR_I10_HUMAN_PRODUCT_ACCEPTANCE`
+State: `I10_PRODUCT_ACCEPTED_CANONICAL_MAIN`
 
 Repository: `/home/sjo1848/dev/alquileres-uspa`
 
@@ -24,7 +24,7 @@ I10 now completes the visitor-to-OWNER lead loop:
 
 ## I10 current state
 
-- Approved at Human Gate.
+- Human Product Acceptance: `PASS` on 2026-08-22.
 - Task Contract: `.orchestration/I10-TASK-CONTRACT.md`.
 - Runtime evidence: `.orchestration/I10-RUNTIME-EVIDENCE.md`.
 - Human acceptance prep: `.orchestration/I10-HUMAN-ACCEPTANCE.md`.
@@ -33,6 +33,9 @@ I10 now completes the visitor-to-OWNER lead loop:
 - State values are exactly `UNREAD` and `READ`.
 - Ownership is enforced from authenticated OWNER plus related listing owner.
 - ADMIN has no global visitor-PII inbox.
+- Mobile was accepted for I10. A non-blocking mobile UX improvement debt is
+  retained for future prioritization; the Human Gate did not specify a more
+  granular defect.
 
 ## Human acceptance finding and repair
 
@@ -63,11 +66,10 @@ logout/account switching, inbox access and invalid-session redirect.
 - Browser OWNER journey passed from fresh sessions with exact OWNER A/B
   credentials, including logout/account switching and invalid-session redirect.
 - Critics initially failed; REWORK completed and evidence persisted.
-- Local API/web are prepared for Sebastián's manual Product Acceptance; no
-  Product Acceptance has been declared.
+- Human Product Acceptance passed: public inquiry, OWNER A authentication and
+  inbox inspection, READ/UNREAD transitions, OWNER B isolation and mobile.
 
 ## Continue from here
 
-Do not implement another increment automatically. Await Sebastián's manual
-Product Acceptance PASS/FAIL findings. Any future product change requires a
-new Human Gate or explicit Task Contract.
+I10 is closed. Reconstruct and prioritize the next natural product improvement;
+do not implement it before its Human Gate approval.

@@ -1,6 +1,6 @@
 # I10 runtime evidence and continuation checkpoint
 
-Status: `READY_FOR_I10_HUMAN_PRODUCT_ACCEPTANCE`
+Status: `PRODUCT_ACCEPTED_CANONICAL_MAIN`
 
 Generated after implementation and REWORK on 2026-08-21.
 
@@ -34,6 +34,20 @@ candidate commit; the later metadata checkpoint does not change product code.
 - Runtime capability gap: no independent worker/critic runtime was exposed;
   separate technical/security and product/integration fallback reviews were
   executed without claiming independence.
+
+## Human Product Acceptance result
+
+Human Product Acceptance returned `PASS` on 2026-08-22:
+
+- public inquiry submission and visitor feedback;
+- OWNER A authentication, Consultas and lead inspection;
+- `UNREAD → READ → UNREAD`;
+- OWNER B isolation;
+- mobile acceptance for I10.
+
+Accepted non-blocking debt: improve the mobile UX in a future prioritized
+increment. No specific sub-defect was supplied by the Human Gate, so none is
+invented here.
 
 I10 working tree changes are the files shown by `git status --short`; no
 feature outside the approved contract was changed.

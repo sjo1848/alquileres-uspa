@@ -1,6 +1,6 @@
 # I10 — OWNER Lead Inbox Task Contract
 
-Status: `READY_FOR_I10_HUMAN_PRODUCT_ACCEPTANCE`
+Status: `PRODUCT_ACCEPTED_CANONICAL_MAIN`
 
 Approved at Human Gate: 2026-08-21
 
@@ -65,6 +65,7 @@ availability improvements, deployment, production and infrastructure changes.
 
 ## Stop condition
 
-Do not declare Product Accepted and do not begin another increment. Stop at
-`READY_FOR_I10_HUMAN_PRODUCT_ACCEPTANCE` with the local app prepared and the
-manual journey persisted in `.orchestration/I10-HUMAN-ACCEPTANCE.md`.
+Human Product Acceptance passed on 2026-08-22: public inquiry submission,
+OWNER A authentication/inbox/inspection, reversible READ/UNREAD, OWNER B
+isolation and mobile acceptance. Do not begin another increment until a new
+Human Gate approves a discovery recommendation.

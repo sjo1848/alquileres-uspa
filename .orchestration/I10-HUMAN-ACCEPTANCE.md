@@ -1,10 +1,9 @@
-# I10 — Human Product Acceptance preparation
+# I10 — Human Product Acceptance record
 
-State: `READY_FOR_I10_HUMAN_PRODUCT_ACCEPTANCE`
+State: `PRODUCT_ACCEPTED_CANONICAL_MAIN`
 
-This is a manual product review checkpoint. Automated tests and technical
-critics do not constitute Product Acceptance. Only Sebastián can issue the
-final PASS/FAIL.
+Human Product Acceptance: `PASS` issued by Sebastián on 2026-08-22.
+Automated tests and technical critics did not substitute for this decision.
 
 Acceptance candidate branch: `i10-owner-lead-inbox-acceptance`
 
@@ -93,7 +92,14 @@ as proof of deletion: automated deletion is a known I10 enforcement gap.
 - Human acceptance repair: fresh browser OWNER A and OWNER B sessions passed;
   logout/account switching and invalid-session redirect also passed.
 
-## Stop rule
+## Accepted result and debt
 
-Do not implement I11 or unrelated fixes while awaiting acceptance. Await
-Sebastián's product PASS/FAIL findings.
+- Public inquiry submission: PASS.
+- OWNER A authentication, inbox, inspection and READ/UNREAD: PASS.
+- OWNER B isolation: PASS.
+- Mobile: accepted for I10.
+- Non-blocking debt: improve mobile UX in a future prioritized increment; no
+  more granular finding was supplied by the Human Gate.
+
+I10 is Product Accepted. The next action is discovery and a new Human Gate,
+not automatic implementation.
