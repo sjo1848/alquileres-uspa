@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { ValidationPipe } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { describe, expect, it } from 'vitest';
@@ -62,7 +63,28 @@ describe('PublicListingsQueryDto', () => {
     expect(await validate(enabled)).toHaveLength(0);
     expect(await validate(disabled)).toHaveLength(0);
     expect(await validate(invalid)).toEqual(
-      expect.arrayContaining([expect.objectContaining({ property: 'availableOnly' })]),
+      expect.arrayContaining([
+        expect.objectContaining({ property: 'availableOnly' }),
+      ]),
     );
+  });
+
+  it('rejects an invalid availableOnly query through the application ValidationPipe', async () => {
+    const pipe = new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    });
+
+    await expect(
+      pipe.transform(
+        { availableOnly: 'yes' },
+        {
+          type: 'query',
+          metatype: PublicListingsQueryDto,
+          data: '',
+        },
+      ),
+    ).rejects.toThrow();
   });
 });

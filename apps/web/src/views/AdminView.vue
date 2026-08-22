@@ -7,6 +7,7 @@ import {
   createSelectionGuard,
   editableListingPayload,
 } from './area-helpers';
+import { formatConfirmationDate } from './availability-helpers';
 
 type Status = 'DRAFT' | 'SUBMITTED' | 'REJECTED' | 'APPROVED';
 type Availability = 'AVAILABLE' | 'UNAVAILABLE';
@@ -28,7 +29,7 @@ type Listing = {
   status: Status;
   publicationStatus: 'UNPUBLISHED' | 'PUBLISHED';
   availabilityStatus: Availability;
-  lastConfirmedAt: string;
+  lastConfirmedAt: string | null;
   rejectionReason?: string | null;
   updatedAt: string;
   owner: Owner;

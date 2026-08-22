@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { apiUrl, ApiError, request } from '../api';
+import {
+  availabilityLabel,
+  availabilityQuery,
+  freshnessLabel,
+  freshnessMarker,
+  type AvailabilityStatus,
+  type FreshnessStatus,
+} from './availability-helpers';
 
 type Image = { id: string; contentType: string };
 type Listing = {
@@ -11,6 +19,9 @@ type Listing = {
   pricePerNight: number;
   maxGuests: number;
   images: Image[];
+  availabilityStatus: AvailabilityStatus;
+  lastConfirmedAt: string | null;
+  freshnessStatus: FreshnessStatus;
 };
 type Page = {
   items: Listing[];
@@ -24,19 +35,28 @@ const filters = reactive({
   minPricePerNight: '',
   maxPricePerNight: '',
   maxGuests: '',
+  soloDisponibles: false,
 });
 const page = ref<Page | null>(null);
 const loading = ref(false);
 const error = ref('');
+const failedPage = ref(1);
 const failedImages = ref(new Set<string>());
 const pageSize = 20;
 const query = (pageNumber: number) =>
   new URLSearchParams(
-    Object.entries({ ...filters, page: pageNumber, pageSize }).filter(
-      ([, value]) => value !== '',
-    ) as string[][],
+    Object.entries({
+      location: filters.location,
+      minPricePerNight: filters.minPricePerNight,
+      maxPricePerNight: filters.maxPricePerNight,
+      maxGuests: filters.maxGuests,
+      ...availabilityQuery(filters.soloDisponibles),
+      page: pageNumber,
+      pageSize,
+    }).filter(([, value]) => value !== '') as string[][],
   ).toString();
 async function search(pageNumber = 1) {
+  failedPage.value = pageNumber;
   loading.value = true;
   error.value = '';
   try {
@@ -58,13 +78,23 @@ function imageUrl(listing: Listing) {
 function imageFailed(listingId: string) {
   failedImages.value = new Set(failedImages.value).add(listingId);
 }
+function resetFilters() {
+  filters.location = '';
+  filters.minPricePerNight = '';
+  filters.maxPricePerNight = '';
+  filters.maxGuests = '';
+  filters.soloDisponibles = false;
+  void search();
+}
 void search();
 </script>
 <template>
   <section class="hero">
     <p class="eyebrow">BUSCADOR</p>
     <h2>Encontrá tu próxima estadía</h2>
-    <p>Alquileres publicados en Uspallata, con disponibilidad confirmada.</p>
+    <p>
+      Alquileres publicados en Uspallata, con información de disponibilidad.
+    </p>
   </section>
   <form class="filters card" @submit.prevent="search()">
     <h3>Filtrar alojamientos</h3>
@@ -95,11 +125,35 @@ void search();
       >Huéspedes máximos
       <input v-model="filters.maxGuests" name="maxGuests" type="number" min="1"
     /></label>
+    <label class="availability-filter">
+      <input
+        v-model="filters.soloDisponibles"
+        name="soloDisponibles"
+        type="checkbox"
+      />
+      Solo disponibles
+    </label>
     <button type="submit" :disabled="loading">
       {{ loading ? 'Buscando…' : 'Buscar' }}
     </button>
+    <button
+      type="button"
+      class="secondary"
+      :disabled="loading"
+      @click="resetFilters"
+    >
+      Restablecer filtros
+    </button>
   </form>
-  <p v-if="error" class="error" role="alert">{{ error }}</p>
+  <div v-if="error" class="error-state" role="alert">
+    <p class="error">{{ error }}</p>
+    <p v-if="page" class="previous-results" role="status">
+      Mostrando los resultados anteriores.
+    </p>
+    <button type="button" class="inline-retry" @click="search(failedPage)">
+      Reintentar búsqueda
+    </button>
+  </div>
   <p v-if="loading" aria-live="polite">Cargando alojamientos…</p>
   <template v-else-if="page">
     <p aria-live="polite">
@@ -143,6 +197,37 @@ void search();
           <strong>${{ listing.pricePerNight }}</strong> por noche · hasta
           {{ listing.maxGuests }} huéspedes
         </p>
+        <div class="availability-summary" aria-label="Disponibilidad">
+          <p
+            class="status"
+            :class="[
+              listing.availabilityStatus === 'AVAILABLE'
+                ? 'available'
+                : 'unavailable',
+              listing.freshnessStatus !== 'FRESH'
+                ? 'availability-unconfirmed'
+                : '',
+            ]"
+          >
+            {{
+              availabilityLabel(
+                listing.availabilityStatus,
+                listing.freshnessStatus,
+              )
+            }}
+          </p>
+          <p
+            class="freshness"
+            :class="`freshness-${listing.freshnessStatus.toLowerCase()}`"
+          >
+            <span aria-hidden="true">{{
+              freshnessMarker(listing.freshnessStatus)
+            }}</span>
+            {{
+              freshnessLabel(listing.freshnessStatus, listing.lastConfirmedAt)
+            }}
+          </p>
+        </div>
         <RouterLink class="button-link" :to="`/listings/${listing.id}`"
           >Ver ficha</RouterLink
         >

@@ -3,7 +3,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ListingsService } from './listings.service.js';
 
 describe('ListingsService ownership', () => {
@@ -34,6 +34,10 @@ describe('ListingsService ownership', () => {
       async (callback: (tx: any) => unknown) => callback(prisma),
     );
     prisma.$queryRaw.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('lists only the authenticated owner listings', async () => {
@@ -124,6 +128,9 @@ describe('ListingsService ownership', () => {
   });
 
   it('updates availability only for the authenticated owner', async () => {
+    vi.useFakeTimers();
+    const confirmedAt = new Date('2026-08-22T12:00:00.000Z');
+    vi.setSystemTime(confirmedAt);
     (prisma as any).listing.updateMany.mockResolvedValue({ count: 1 });
     (prisma as any).listing.findFirst.mockResolvedValue({
       ...listing,
@@ -137,20 +144,23 @@ describe('ListingsService ownership', () => {
         where: { id: 'l1', ownerId: 'owner-a' },
         data: expect.objectContaining({
           availabilityStatus: 'UNAVAILABLE',
-          lastConfirmedAt: expect.any(Date),
+          lastConfirmedAt: confirmedAt,
         }),
       }),
     );
   });
 
   it('reconfirms only the authenticated owner listing', async () => {
+    vi.useFakeTimers();
+    const confirmedAt = new Date('2026-08-22T12:00:00.000Z');
+    vi.setSystemTime(confirmedAt);
     (prisma as any).listing.updateMany.mockResolvedValue({ count: 1 });
     (prisma as any).listing.findFirst.mockResolvedValue(listing);
     await service.reconfirm('owner-a', 'l1');
     expect((prisma as any).listing.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'l1', ownerId: 'owner-a' },
-        data: { lastConfirmedAt: expect.any(Date) },
+        data: { lastConfirmedAt: confirmedAt },
       }),
     );
   });

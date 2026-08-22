@@ -15,6 +15,7 @@ import {
   type ContactEvent,
   type ContactEventsResponse,
 } from './contact-helpers';
+import { formatConfirmationDate } from './availability-helpers';
 
 type Status = 'DRAFT' | 'SUBMITTED' | 'REJECTED' | 'APPROVED';
 type Availability = 'AVAILABLE' | 'UNAVAILABLE';
@@ -27,7 +28,7 @@ type Listing = {
   maxGuests: number;
   status: Status;
   availabilityStatus: Availability;
-  lastConfirmedAt: string;
+  lastConfirmedAt: string | null;
   rejectionReason?: string | null;
 };
 type Image = {
@@ -723,7 +724,7 @@ onMounted(() => {
             Reconfirmar</button
           ><small
             >Última confirmación:
-            {{ new Date(selected.lastConfirmedAt).toLocaleString() }}</small
+            {{ formatConfirmationDate(selected.lastConfirmedAt) }}</small
           >
         </section>
         <button

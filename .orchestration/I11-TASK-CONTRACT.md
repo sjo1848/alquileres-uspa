@@ -1,9 +1,12 @@
 # I11 Task Contract — Truthful availability and freshness
 
-Status: `APPROVED_FOR_IMPLEMENTATION`
+Status: `IMPLEMENTED_PENDING_HUMAN_PRODUCT_ACCEPTANCE`
 Approved at Human Gate: 2026-08-22
 Implementation base: `0fb88d2c75984904f340cc669d42ec7d23ebb85c`
 Scope owner: Codex orchestrator
+
+Implementation evidence: `.orchestration/I11-RUNTIME-EVIDENCE.md`
+Human acceptance preparation: `.orchestration/I11-HUMAN-ACCEPTANCE.md`
 
 ## Product intent
 
