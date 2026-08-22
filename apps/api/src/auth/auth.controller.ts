@@ -80,10 +80,19 @@ export class AuthController {
   }
 
   private cookieOptions() {
+    const configuredSameSite = process.env.COOKIE_SAME_SITE;
+    const sameSite: 'lax' | 'strict' | 'none' =
+      configuredSameSite === 'none' || configuredSameSite === 'strict'
+        ? configuredSameSite
+        : 'lax';
+
     return {
       httpOnly: true,
-      sameSite: 'lax' as const,
-      secure: process.env.NODE_ENV === 'production',
+      sameSite,
+      secure:
+        process.env.COOKIE_SECURE === 'true' ||
+        process.env.NODE_ENV === 'production' ||
+        sameSite === 'none',
       maxAge: 15 * 60 * 1000,
       path: '/',
     };
