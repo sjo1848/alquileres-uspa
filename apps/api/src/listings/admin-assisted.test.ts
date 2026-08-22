@@ -1,6 +1,6 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ListingsService } from './listings.service.js';
 
 describe('I08 assisted listings transaction boundaries', () => {
@@ -53,6 +53,10 @@ describe('I08 assisted listings transaction boundaries', () => {
     tx.listing.deleteMany.mockResolvedValue({ count: 1 });
     tx.listingImage.findMany.mockResolvedValue([]);
     audit.record.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it.each([
@@ -309,6 +313,39 @@ describe('I08 assisted listings transaction boundaries', () => {
     });
     await expect(
       service.updateAssisted(admin, 'listing-1', { title: 'x' }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('keeps assisted availability and reconfirmation scoped to the persisted owner', async () => {
+    vi.useFakeTimers();
+    const confirmedAt = new Date('2026-08-22T13:00:00.000Z');
+    vi.setSystemTime(confirmedAt);
+
+    await service.updateAvailabilityAssisted(admin, 'listing-1', {
+      availabilityStatus: 'UNAVAILABLE' as any,
+    });
+    expect(tx.listing.updateMany).toHaveBeenLastCalledWith({
+      where: { id: 'listing-1', ownerId: owner.id },
+      data: { availabilityStatus: 'UNAVAILABLE', lastConfirmedAt: confirmedAt },
+    });
+
+    await service.reconfirmAssisted(admin, 'listing-1');
+    expect(tx.listing.updateMany).toHaveBeenLastCalledWith({
+      where: { id: 'listing-1', ownerId: owner.id },
+      data: { lastConfirmedAt: confirmedAt },
+    });
+
+    tx.listing.findUnique.mockResolvedValue({
+      ownerId: 'admin-1',
+      owner: { role: Role.ADMIN },
+    });
+    await expect(
+      service.updateAvailabilityAssisted(admin, 'listing-1', {
+        availabilityStatus: 'AVAILABLE' as any,
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    await expect(
+      service.reconfirmAssisted(admin, 'listing-1'),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

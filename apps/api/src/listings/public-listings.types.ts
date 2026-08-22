@@ -1,8 +1,9 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsInt,
   IsOptional,
   IsString,
+  IsBoolean,
   Max,
   MaxLength,
   Min,
@@ -28,6 +29,14 @@ export class PublicListingsQueryDto {
   @Min(1)
   @Max(2_147_483_647)
   maxGuests?: number;
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === true || value === 'true') return true;
+    if (value === false || value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  availableOnly = false;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(10_000) page = 1;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(50) pageSize = 20;
 }
@@ -48,8 +57,8 @@ export class PublicListingDto {
   maxGuests!: number;
   images!: PublicListingImageDto[];
   availabilityStatus!: 'AVAILABLE' | 'UNAVAILABLE';
-  lastConfirmedAt!: Date;
-  freshnessStatus!: 'FRESH' | 'STALE';
+  lastConfirmedAt!: Date | null;
+  freshnessStatus!: 'FRESH' | 'STALE' | 'UNCONFIRMED';
 }
 
 export class PublicListingsPageDto {

@@ -108,6 +108,9 @@ export class ListingsService {
       ...(query.location
         ? { location: { contains: query.location, mode: 'insensitive' } }
         : {}),
+      ...(query.availableOnly
+        ? { availabilityStatus: ListingAvailabilityStatus.AVAILABLE }
+        : {}),
       ...(query.maxGuests !== undefined
         ? { maxGuests: { gte: query.maxGuests } }
         : {}),
@@ -185,7 +188,7 @@ export class ListingsService {
     pricePerNight: number;
     maxGuests: number;
     availabilityStatus: ListingAvailabilityStatus;
-    lastConfirmedAt: Date;
+    lastConfirmedAt: Date | null;
     images: Array<{
       id: string;
       contentType: string;
@@ -202,10 +205,11 @@ export class ListingsService {
       maxGuests: listing.maxGuests,
       availabilityStatus: listing.availabilityStatus,
       lastConfirmedAt: listing.lastConfirmedAt,
-      freshnessStatus:
-        Date.now() - listing.lastConfirmedAt.getTime() <= FRESHNESS_WINDOW_MS
+      freshnessStatus: listing.lastConfirmedAt
+        ? Date.now() - listing.lastConfirmedAt.getTime() <= FRESHNESS_WINDOW_MS
           ? 'FRESH'
-          : 'STALE',
+          : 'STALE'
+        : 'UNCONFIRMED',
       images: listing.images.map(
         ({ id, contentType, sizeBytes, position }) => ({
           id,

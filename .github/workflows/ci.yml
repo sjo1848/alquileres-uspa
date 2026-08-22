@@ -39,6 +39,9 @@ jobs:
       - run: pnpm format:check
       - run: pnpm prisma:generate
       - run: pnpm --filter @alquileres/api prisma:deploy
+      - run: pnpm migration:evidence
+        env:
+          I11_PSQL_BIN: psql
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build

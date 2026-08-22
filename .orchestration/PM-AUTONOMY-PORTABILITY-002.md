@@ -378,3 +378,19 @@ proposal **truthful availability and freshness in the public catalog**. It
 requires Human authority for confirmation semantics and catalog treatment of
 unavailable/stale results. No feature implementation has begun. Current state:
 `READY_FOR_NEXT_NATURAL_IMPROVEMENT_HUMAN_GATE`.
+
+## 11. I11 implementation checkpoint
+
+Human Gate approved I11 with authoritative confirmation semantics: creation
+does not confirm; explicit OWNER availability change or reconfirmation does;
+unavailable and stale inventory remains visible; `Solo disponibles` is opt-in
+and OFF by default. The explicit contract is
+`.orchestration/I11-TASK-CONTRACT.md`.
+
+Implementation, worker/critic independence, REWORK and reproducible evidence
+are persisted in `.orchestration/I11-RUNTIME-EVIDENCE.md`. Human testing
+instructions are in `.orchestration/I11-HUMAN-ACCEPTANCE.md`.
+
+Current Project Method state: `READY_FOR_I11_HUMAN_PRODUCT_ACCEPTANCE`.
+No product acceptance has been declared and no subsequent improvement has
+started.

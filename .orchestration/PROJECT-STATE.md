@@ -1,6 +1,6 @@
 # Canonical Project State — Alquileres Uspallata
 
-State: `READY_FOR_NEXT_NATURAL_IMPROVEMENT_HUMAN_GATE`
+State: `READY_FOR_I11_HUMAN_PRODUCT_ACCEPTANCE`
 
 Repository: `/home/sjo1848/dev/alquileres-uspa`
 
@@ -88,3 +88,19 @@ Do not implement it before approval.
   remains an explicit enforcement gap. Cookie-authenticated state changes also
   need a future CSRF review; neither debt is silently included in the proposed
   product increment.
+
+## I11 current state
+
+I11 — Truthful availability and freshness in the public catalog is implemented
+and awaiting Human Product Acceptance. Read, in order:
+
+1. `.orchestration/I11-TASK-CONTRACT.md`
+2. `.orchestration/I11-RUNTIME-EVIDENCE.md`
+3. `.orchestration/I11-HUMAN-ACCEPTANCE.md`
+
+I11 candidate SHA: pending durable candidate commit.
+
+The implementation makes `lastConfirmedAt` nullable and truthful, keeps
+unavailable/stale listings visible, adds opt-in `Solo disponibles`, aligns
+catalog/detail copy and preserves public contact. No next improvement is
+authorized.

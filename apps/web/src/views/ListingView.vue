@@ -2,6 +2,14 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { apiUrl, ApiError, publicListingPath, request } from '../api';
 import { useRoute } from 'vue-router';
+import {
+  availabilityLabel,
+  formatConfirmationDate,
+  freshnessLabel,
+  freshnessMarker,
+  type AvailabilityStatus,
+  type FreshnessStatus,
+} from './availability-helpers';
 const route = useRoute();
 type Listing = {
   id: string;
@@ -10,9 +18,9 @@ type Listing = {
   location: string;
   pricePerNight: number;
   maxGuests: number;
-  availabilityStatus: 'AVAILABLE' | 'UNAVAILABLE';
-  lastConfirmedAt: string;
-  freshnessStatus: 'FRESH' | 'STALE';
+  availabilityStatus: AvailabilityStatus;
+  lastConfirmedAt: string | null;
+  freshnessStatus: FreshnessStatus;
   images: { id: string; contentType: string; position: number }[];
 };
 const listing = ref<Listing>();
@@ -49,6 +57,9 @@ async function load(id: string) {
     if (route.params.id === id) loading.value = false;
   }
 }
+function retry() {
+  void load(String(route.params.id));
+}
 async function sendContact() {
   submitting.value = true;
   feedback.value = '';
@@ -74,9 +85,10 @@ function imageFailed(imageId: string) {
   failedImages.value = new Set(failedImages.value).add(imageId);
 }
 const freshness = computed(() =>
-  listing.value?.freshnessStatus === 'FRESH'
-    ? 'Confirmación reciente'
-    : 'Confirmación desactualizada',
+  freshnessLabel(
+    listing.value?.freshnessStatus,
+    listing.value?.lastConfirmedAt,
+  ),
 );
 watch(
   () => route.params.id,
@@ -86,13 +98,21 @@ watch(
 </script>
 <template>
   <p v-if="loading" aria-live="polite">Cargando ficha…</p>
-  <p v-else-if="error" class="error" role="alert">{{ error }}</p>
+  <section v-else-if="error" class="error-state card" role="alert">
+    <p class="error">{{ error }}</p>
+    <div class="session-actions">
+      <button type="button" @click="retry">Reintentar</button>
+      <RouterLink class="button-link secondary" to="/"
+        >Volver al buscador</RouterLink
+      >
+    </div>
+  </section>
   <template v-else-if="listing"
     ><p><RouterLink to="/">← Volver al buscador</RouterLink></p>
     <article class="detail card">
       <p class="eyebrow">{{ listing.location }}</p>
       <h2>{{ listing.title }}</h2>
-      <div class="gallery">
+      <div v-if="listing.images.length" class="gallery">
         <template v-for="image in listing.images" :key="image.id">
           <img
             v-if="!failedImages.has(image.id)"
@@ -110,6 +130,14 @@ watch(
           </div>
         </template>
       </div>
+      <div
+        v-else
+        class="image-placeholder gallery-placeholder"
+        role="img"
+        :aria-label="`Galería vacía para ${listing.title}`"
+      >
+        <span>Sin imágenes disponibles</span>
+      </div>
       <p>{{ listing.description }}</p>
       <p>
         <strong>${{ listing.pricePerNight }}</strong> por noche · hasta
@@ -117,21 +145,27 @@ watch(
       </p>
       <p
         class="status"
-        :class="
+        :class="[
           listing.availabilityStatus === 'AVAILABLE'
             ? 'available'
-            : 'unavailable'
-        "
+            : 'unavailable',
+          listing.freshnessStatus !== 'FRESH' ? 'availability-unconfirmed' : '',
+        ]"
       >
         {{
-          listing.availabilityStatus === 'AVAILABLE'
-            ? 'Disponible'
-            : 'No disponible'
+          availabilityLabel(listing.availabilityStatus, listing.freshnessStatus)
         }}
       </p>
-      <p role="status">
+      <p
+        class="freshness"
+        :class="`freshness-${listing.freshnessStatus.toLowerCase()}`"
+        role="status"
+      >
+        <span aria-hidden="true">{{
+          freshnessMarker(listing.freshnessStatus)
+        }}</span>
         {{ freshness }} · última confirmación:
-        {{ new Date(listing.lastConfirmedAt).toLocaleDateString('es-AR') }}
+        {{ formatConfirmationDate(listing.lastConfirmedAt) }}
       </p>
     </article>
     <section class="card contact">
