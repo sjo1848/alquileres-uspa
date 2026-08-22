@@ -8,7 +8,7 @@ Repository: `/home/sjo1848/dev/alquileres-uspa`
 
 Canonical checkout for the acceptance candidate: branch
 `i10-owner-lead-inbox-acceptance` at
-`b464bcb270c034a45d062d80c3a6921bcb450c8c` (base
+`a3471a9c5c6bd1269b8acde7ca79331c8d4b3d4d` (base
 `63748c09f20418e0ba1097ae036e8aa49db29c77`).
 
 Method rule: `PRODUCT_ACCEPTANCE_READY` requires a durable, reproducible

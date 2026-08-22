@@ -7,7 +7,7 @@ Approved at Human Gate: 2026-08-21
 Repository checkpoint before implementation: `63748c09f20418e0ba1097ae036e8aa49db29c77`
 
 Final I10 acceptance candidate: branch `i10-owner-lead-inbox-acceptance`,
-commit `b464bcb270c034a45d062d80c3a6921bcb450c8c`.
+commit `a3471a9c5c6bd1269b8acde7ca79331c8d4b3d4d`.
 
 Acceptance readiness rule: `PRODUCT_ACCEPTANCE_READY` requires a durable,
 reproducible candidate normally identified by commit SHA; a working-tree

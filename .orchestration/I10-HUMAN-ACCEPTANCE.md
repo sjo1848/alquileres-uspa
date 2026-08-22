@@ -8,7 +8,7 @@ final PASS/FAIL.
 
 Acceptance candidate branch: `i10-owner-lead-inbox-acceptance`
 
-Acceptance candidate commit: `b464bcb270c034a45d062d80c3a6921bcb450c8c`
+Acceptance candidate commit: `a3471a9c5c6bd1269b8acde7ca79331c8d4b3d4d`
 
 ## Local runtime
 
@@ -16,6 +16,10 @@ Acceptance candidate commit: `b464bcb270c034a45d062d80c3a6921bcb450c8c`
 - Public listing: `http://127.0.0.1:5174/listings/cmt39g87f0003gcblq23wi725`
 - OWNER area: `http://127.0.0.1:5174/owner`
 - API health: `http://127.0.0.1:3302/health`
+- Public acceptance web tunnel:
+  `https://segments-cleanup-lace-glucose.trycloudflare.com`
+- Public acceptance API tunnel:
+  `https://glossary-reform-authentic-thread.trycloudflare.com`
 - Database: isolated synthetic PostgreSQL at `127.0.0.1:55435`.
 - Current demo listing: `Cabaña I10`, `Uspallata`.
 - Current prepared inquiry: visitor `Sebastián PA`,
@@ -23,6 +27,9 @@ Acceptance candidate commit: `b464bcb270c034a45d062d80c3a6921bcb450c8c`
   Acceptance`, state `UNREAD`.
 - Preparation verification: API health returned `200`; OWNER A `/owner`
   showed exactly `1 sin leer` and the prepared inquiry.
+
+The tunnel API must run with `COOKIE_SAME_SITE=none` and
+`COOKIE_SECURE=true`; otherwise browsers reject the cross-site session cookie.
 
 The app is running from the current I10 worktree. The persisted Docker volume
 on the normal port 5432 is not used because its historical credentials do not
@@ -78,11 +85,13 @@ as proof of deletion: automated deletion is a known I10 enforcement gap.
 
 ## Technical readiness already verified
 
-- `pnpm test`: API 94 and web 20 tests passed.
+- `pnpm test`: API 96 and web 20 tests passed.
 - `pnpm lint`, `pnpm format:check`, `pnpm security:check`, `pnpm build` passed.
 - Prisma validation passed and all eight migrations are applied in the isolated
   acceptance database.
 - Versioned integration runner and independent critics passed after REWORK.
+- Human acceptance repair: fresh browser OWNER A and OWNER B sessions passed;
+  logout/account switching and invalid-session redirect also passed.
 
 ## Stop rule
 

@@ -15,10 +15,25 @@ Base product commit: `63748c09f20418e0ba1097ae036e8aa49db29c77`
 
 Acceptance candidate branch: `i10-owner-lead-inbox-acceptance`
 
-Acceptance candidate commit: `b464bcb270c034a45d062d80c3a6921bcb450c8c`
+Acceptance candidate commit: `a3471a9c5c6bd1269b8acde7ca79331c8d4b3d4d`
 
 All technical evidence below corresponds to the I10 implementation in that
 candidate commit; the later metadata checkpoint does not change product code.
+
+## Human acceptance finding and repair
+
+- Classification: `HUMAN_PRODUCT_ACCEPTANCE_FAIL` on the previous candidate.
+- Root cause: in the two-Quick-Tunnel environment the browser rejected the
+  default `SameSite=Lax` API session cookie; login returned 201, but `/auth/me`
+  and OWNER routes returned 401.
+- Repair: explicit `COOKIE_SAME_SITE=none` selects `SameSite=None` and forces
+  `Secure=true`; local defaults remain `SameSite=Lax`.
+- Fresh browser sessions with the exact OWNER A/B credentials passed login,
+  `/owner`, Consultas, logout/account switch, isolation and invalid-session
+  redirect. Public contact still returned `RECEIVED`.
+- Runtime capability gap: no independent worker/critic runtime was exposed;
+  separate technical/security and product/integration fallback reviews were
+  executed without claiming independence.
 
 I10 working tree changes are the files shown by `git status --short`; no
 feature outside the approved contract was changed.
@@ -144,15 +159,27 @@ not edit files. REWORK completed:
   runtime issue; no production state was touched.
 - No deployment or production readiness work was performed.
 
+## Repair verification
+
+- API tests: 96 passed; web tests: 20 passed.
+- `pnpm lint`, `pnpm format:check`, `pnpm security:check`, `pnpm build` passed.
+- Prisma validation and migration deployment passed; no pending migrations.
+- Remote I10 integration runner passed, including READ/UNREAD and isolation.
+- Technical/security fallback review: PASS; no authentication bypass or
+  ownership weakening.
+- Product/integration fallback review: PASS; public flow and OWNER journeys
+  passed from fresh browser sessions.
+
 ## Autonomy metrics
 
 - `human_coordination_messages`: 0 after the Human Gate approval.
 - Human implementation interventions: 0.
 - Workers: backend `Fermat`, frontend `Erdos`.
-- Critics: `Parfit`, `James`; independent and non-editing.
+- Critics: `Parfit`, `James`; prior independent/non-editing critics. Repair
+  runtime had no independent critic capability exposed (`RUNTIME_CAPABILITY_GAP`).
 - Worker/critic coordination delegated to runtime: 0 human relay messages.
-- REWORK loops: 2 (route-contract mismatch; critic-driven ownership/evidence/
-  portability corrections).
+- REWORK loops: 3 (route-contract mismatch; critic-driven ownership/evidence/
+  portability corrections; Human Acceptance cross-site session repair).
 - Runtime capability gap: completed workers had to be closed before critics
   could spawn because the worker thread limit was reached. This was handled
   autonomously. No product decision was escalated.

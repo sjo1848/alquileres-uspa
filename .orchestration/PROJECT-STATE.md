@@ -7,7 +7,7 @@ Repository: `/home/sjo1848/dev/alquileres-uspa`
 Base commit: `63748c09f20418e0ba1097ae036e8aa49db29c77`
 
 Acceptance candidate branch: `i10-owner-lead-inbox-acceptance`
-Acceptance candidate commit: `b464bcb270c034a45d062d80c3a6921bcb450c8c`
+Acceptance candidate commit: `a3471a9c5c6bd1269b8acde7ca79331c8d4b3d4d`
 
 `PRODUCT_ACCEPTANCE_READY` requires a durable, reproducible candidate,
 normally identified by commit SHA. A working-tree fingerprint is BUILD
@@ -33,6 +33,19 @@ I10 now completes the visitor-to-OWNER lead loop:
 - State values are exactly `UNREAD` and `READ`.
 - Ownership is enforced from authenticated OWNER plus related listing owner.
 - ADMIN has no global visitor-PII inbox.
+
+## Human acceptance finding and repair
+
+The previous candidate failed Human Product Acceptance in the two-subdomain
+Quick Tunnel environment: login returned 201, but the browser rejected the
+session cookie, so `/auth/me` and OWNER routes returned 401. The root cause
+was the default `SameSite=Lax` cookie policy for a cross-site frontend/API
+deployment.
+
+The repair is persisted in candidate `a3471a9c5c6bd1269b8acde7ca79331c8d4b3d4d`:
+explicit `COOKIE_SAME_SITE=none` forces `Secure=true`, while local defaults
+remain `Lax` and non-secure. Fresh browser sessions verified OWNER A and B,
+logout/account switching, inbox access and invalid-session redirect.
 - Retention target is 180 days; automated deletion is not implemented and is
   explicitly recorded as an enforcement gap.
 - Out of scope remains WhatsApp, notifications, chat, CONTACTED/CLOSED,
@@ -40,14 +53,15 @@ I10 now completes the visitor-to-OWNER lead loop:
 
 ## Evidence status
 
-- API: 94 tests passed.
+- API: 96 tests passed.
 - Web: 20 tests passed.
 - Full test suite: passed.
 - Lint, format, security and build: passed.
 - Prisma schema validation: passed with a valid test DATABASE_URL.
 - All eight migrations, including I10, applied to isolated PostgreSQL 16.
 - Versioned HTTP integration runner passed.
-- Browser OWNER journey passed at desktop and was visually checked at 390x844.
+- Browser OWNER journey passed from fresh sessions with exact OWNER A/B
+  credentials, including logout/account switching and invalid-session redirect.
 - Critics initially failed; REWORK completed and evidence persisted.
 - Local API/web are prepared for Sebastián's manual Product Acceptance; no
   Product Acceptance has been declared.
