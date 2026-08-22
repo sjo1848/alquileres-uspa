@@ -98,7 +98,7 @@ and awaiting Human Product Acceptance. Read, in order:
 2. `.orchestration/I11-RUNTIME-EVIDENCE.md`
 3. `.orchestration/I11-HUMAN-ACCEPTANCE.md`
 
-I11 candidate SHA: pending durable candidate commit.
+I11 candidate SHA: `d378b83aa4fb6c23f0fa74908458fe299e63037f`.
 
 The implementation makes `lastConfirmedAt` nullable and truthful, keeps
 unavailable/stale listings visible, adds opt-in `Solo disponibles`, aligns

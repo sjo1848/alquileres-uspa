@@ -1,7 +1,7 @@
 # I11 Human Product Acceptance preparation
 
 Status: `READY_FOR_I11_HUMAN_PRODUCT_ACCEPTANCE`
-Candidate SHA: recorded in `PROJECT-STATE.md` after final commit
+Candidate SHA: `d378b83aa4fb6c23f0fa74908458fe299e63037f`
 
 Use synthetic local data only.
 

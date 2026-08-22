@@ -2,7 +2,7 @@
 
 Status: `READY_FOR_I11_HUMAN_PRODUCT_ACCEPTANCE`
 Implementation base: `0fb88d2c75984904f340cc669d42ec7d23ebb85c`
-Candidate SHA: recorded in `PROJECT-STATE.md` after durable commit
+Candidate SHA: `d378b83aa4fb6c23f0fa74908458fe299e63037f`
 
 ## Contract and implementation
 
