@@ -80,7 +80,7 @@ model Listing {
   status         ListingStatus @default(DRAFT)
   publicationStatus ListingPublicationStatus @default(UNPUBLISHED) @map("publication_status")
   availabilityStatus ListingAvailabilityStatus @default(AVAILABLE) @map("availability_status")
-  lastConfirmedAt DateTime @default(now()) @map("last_confirmed_at")
+  lastConfirmedAt DateTime? @map("last_confirmed_at")
   rejectionReason String?       @map("rejection_reason")
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")

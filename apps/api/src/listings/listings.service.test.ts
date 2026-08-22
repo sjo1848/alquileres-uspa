@@ -135,7 +135,10 @@ describe('ListingsService ownership', () => {
     expect((prisma as any).listing.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'l1', ownerId: 'owner-a' },
-        data: expect.objectContaining({ availabilityStatus: 'UNAVAILABLE' }),
+        data: expect.objectContaining({
+          availabilityStatus: 'UNAVAILABLE',
+          lastConfirmedAt: expect.any(Date),
+        }),
       }),
     );
   });
@@ -145,8 +148,40 @@ describe('ListingsService ownership', () => {
     (prisma as any).listing.findFirst.mockResolvedValue(listing);
     await service.reconfirm('owner-a', 'l1');
     expect((prisma as any).listing.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 'l1', ownerId: 'owner-a' } }),
+      expect.objectContaining({
+        where: { id: 'l1', ownerId: 'owner-a' },
+        data: { lastConfirmedAt: expect.any(Date) },
+      }),
     );
+  });
+
+  it('does not set confirmation on creation or unrelated listing edits', async () => {
+    (prisma as any).listing.create.mockResolvedValue(listing);
+    await service.create('owner-a', {
+      title: 'x',
+      description: '',
+      location: 'Uspallata',
+      pricePerNight: 100,
+      maxGuests: 2,
+    });
+    expect((prisma as any).listing.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ ownerId: 'owner-a', status: 'DRAFT' }),
+    });
+    expect(
+      (prisma as any).listing.create.mock.calls[0][0].data,
+    ).not.toHaveProperty('lastConfirmedAt');
+
+    (prisma as any).listing.updateMany.mockResolvedValue({ count: 1 });
+    (prisma as any).listing.findFirst.mockResolvedValue(listing);
+    await service.update('owner-a', 'l1', { title: 'updated' });
+    expect((prisma as any).listing.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 'l1',
+        ownerId: 'owner-a',
+        status: { in: ['DRAFT', 'REJECTED'] },
+      },
+      data: { title: 'updated' },
+    });
   });
 
   it('deletes only the owner draft with an atomic where clause', async () => {

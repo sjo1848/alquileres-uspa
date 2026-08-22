@@ -95,6 +95,40 @@ describe('public listings catalog', () => {
     expect(result.images[0]).not.toHaveProperty('objectKey');
   });
 
+  it('keeps availability filtering opt-in and filters only available listings', async () => {
+    prisma.listing.findMany.mockResolvedValue([]);
+    prisma.listing.count.mockResolvedValue(0);
+
+    await service.listPublic({ availableOnly: true });
+    expect(prisma.listing.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ availabilityStatus: 'AVAILABLE' }),
+      }),
+    );
+
+    vi.clearAllMocks();
+    prisma.listing.findMany.mockResolvedValue([]);
+    prisma.listing.count.mockResolvedValue(0);
+    await service.listPublic({});
+    expect(prisma.listing.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.not.objectContaining({ availabilityStatus: 'AVAILABLE' }),
+      }),
+    );
+  });
+
+  it('returns an explicit unconfirmed freshness state for null confirmation', async () => {
+    prisma.listing.findFirst.mockResolvedValue({
+      ...published,
+      lastConfirmedAt: null,
+    });
+
+    await expect(service.getPublic('public-1')).resolves.toMatchObject({
+      lastConfirmedAt: null,
+      freshnessStatus: 'UNCONFIRMED',
+    });
+  });
+
   it('does not expose unpublished, rejected, or draft details', async () => {
     prisma.listing.findFirst.mockResolvedValue(null);
     await expect(service.getPublic('private-1')).rejects.toBeInstanceOf(

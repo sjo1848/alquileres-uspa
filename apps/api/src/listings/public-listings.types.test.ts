@@ -45,4 +45,24 @@ describe('PublicListingsQueryDto', () => {
       ]),
     );
   });
+
+  it('parses the opt-in availability filter without making false truthy', async () => {
+    const enabled = plainToInstance(PublicListingsQueryDto, {
+      availableOnly: 'true',
+    });
+    const disabled = plainToInstance(PublicListingsQueryDto, {
+      availableOnly: 'false',
+    });
+    const invalid = plainToInstance(PublicListingsQueryDto, {
+      availableOnly: 'yes',
+    });
+
+    expect(enabled.availableOnly).toBe(true);
+    expect(disabled.availableOnly).toBe(false);
+    expect(await validate(enabled)).toHaveLength(0);
+    expect(await validate(disabled)).toHaveLength(0);
+    expect(await validate(invalid)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ property: 'availableOnly' })]),
+    );
+  });
 });
