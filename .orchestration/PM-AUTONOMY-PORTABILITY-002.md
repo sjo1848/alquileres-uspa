@@ -394,3 +394,21 @@ instructions are in `.orchestration/I11-HUMAN-ACCEPTANCE.md`.
 Current Project Method state: `READY_FOR_I11_HUMAN_PRODUCT_ACCEPTANCE`.
 No product acceptance has been declared and no subsequent improvement has
 started.
+
+## 12. I11 Human Product Acceptance closure and post-I11 discovery
+
+I11 Human Product Acceptance PASS was issued on 2026-08-22 with zero new
+blocking findings. I11 is canonically closed; implementation candidate
+`d378b83aa4fb6c23f0fa74908458fe299e63037f` was accepted and the orchestration
+closure is on `main` at `ed9b529945b6cc856e4bfafb383e486392cf3130`.
+Post-closure CI run `32603805950` passed. No deployment or production
+eligibility claim was made.
+
+Post-I11 discovery is persisted in
+`.orchestration/NEXT-NATURAL-IMPROVEMENT-POST-I11.md` and ends at
+`READY_FOR_NEXT_NATURAL_IMPROVEMENT_HUMAN_GATE`. The bounded recommendation is
+an OWNER `Responder por email` discoverability slice over the existing
+owner-scoped `mailto:` capability. It is not email sending, reply tracking or
+chat. Two independent specialists and two independent critics were used;
+critics required explicit mailto encoding tests and task-level mobile
+acceptance. No implementation has started.
