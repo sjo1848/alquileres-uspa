@@ -1,13 +1,13 @@
 # Canonical Project State — Alquileres Uspallata
 
-State: `READY_FOR_NEXT_NATURAL_IMPROVEMENT_HUMAN_GATE`
+State: `READY_FOR_I13_HUMAN_PRODUCT_ACCEPTANCE`
 
 Repository: `/home/sjo1848/dev/alquileres-uspa`
 
 Base commit: `63748c09f20418e0ba1097ae036e8aa49db29c77`
 
 Canonical branch: `main`
-Canonical HEAD: `8bcdafbd947b9644c5db110a3b360b555c84f67a`
+Canonical HEAD: `8e11beb`
 
 `PRODUCT_ACCEPTANCE_READY` requires a durable, reproducible candidate,
 normally identified by commit SHA. A working-tree fingerprint is BUILD
@@ -107,3 +107,20 @@ unavailable/stale listings visible, adds opt-in `Solo disponibles`, aligns
 catalog/detail copy and preserves public contact. No next improvement is
 authorized; discovery is pending the next Human Gate in
 `.orchestration/NEXT-NATURAL-IMPROVEMENT-POST-I11.md`.
+
+## I13 Product Domain Alignment checkpoint
+
+Human Gate approval was recorded on 2026-08-23 for I13 — Product Domain
+Alignment — Buscayata. I12 “Responder por email” is `REJECTED/SUPERSEDED` and
+was not implemented. I13 candidate `8e11beb` is implemented but not product
+accepted.
+
+Read `.orchestration/I13-TASK-CONTRACT.md`,
+`.orchestration/I13-RUNTIME-EVIDENCE.md` and
+`.orchestration/I13-HUMAN-ACCEPTANCE.md` in that order. The migration preserves
+historical tourist values without arithmetic or semantic inference; the new
+domain remains NULL until an authorized edit. Technical gates, I10/I11
+regressions, I13 integration and browser evidence are green.
+
+Current state is `READY_FOR_I13_HUMAN_PRODUCT_ACCEPTANCE`. Do not start another
+increment, deploy or declare `PRODUCT_ACCEPTED` before the Human Gate.

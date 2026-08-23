@@ -75,7 +75,7 @@ reconfirmation, OWNER isolation, publication/moderation and image behavior.
    publication/moderation and images remain functional.
 7. Repeat changed catalog/detail/form surfaces at mobile widths.
 
-Candidate SHA: pending final commit.
+Candidate SHA: `8e11beb`.
 
 Human Product Acceptance is required; technical evidence does not substitute
 for it.

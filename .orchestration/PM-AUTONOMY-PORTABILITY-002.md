@@ -413,3 +413,27 @@ owner-scoped `mailto:` capability. It is not email sending, reply tracking or
 chat. Two independent specialists and two independent critics were used;
 critics required explicit mailto encoding tests and task-level mobile
 acceptance. No implementation has started.
+
+## 13. I13 Product Domain Alignment
+
+Human Gate approval was recorded on 2026-08-23 for I13 — Product Domain
+Alignment — Buscayata. I12 “Responder por email” is explicitly
+`REJECTED/SUPERSEDED`; no email CTA was implemented.
+
+I13 candidate `8e11beb` implements amount, weekly/monthly period, duration,
+maximum occupants and ARS/USD currency across persistence, API/DTO/filter
+contracts, public catalog/detail, OWNER/ADMIN surfaces and mobile behavior.
+Historical `price_per_night`/`max_guests` values were preserved without
+arithmetic or semantic inference; new domain values remain NULL until an
+authorized edit.
+
+Two implementation workers (Anscombe backend, Sartre frontend) and two
+independent critics (Dirac Product/UX, Parfit Technical/Security) were used.
+Critics returned REWORK; six autonomous REWORK loops resolved migration
+nullability, integration expectation, domain-state/currency/filter behavior,
+mobile overflow, DTO bounds and final regressions. Human coordination remained
+`0`. Host `psql` was unavailable, but Docker fallback produced passing
+migration evidence and is recorded as a runtime capability gap.
+
+Current state is `READY_FOR_I13_HUMAN_PRODUCT_ACCEPTANCE`. No deploy,
+production eligibility claim or product acceptance has been made.
