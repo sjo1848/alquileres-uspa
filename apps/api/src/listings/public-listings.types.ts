@@ -7,7 +7,9 @@ import {
   Max,
   MaxLength,
   Min,
+  IsEnum,
 } from 'class-validator';
+import { Currency, PricePeriod, RentalDuration } from '@prisma/client';
 
 export class PublicListingsQueryDto {
   @IsOptional() @IsString() @MaxLength(240) location?: string;
@@ -16,19 +18,22 @@ export class PublicListingsQueryDto {
   @IsInt()
   @Min(0)
   @Max(2_147_483_647)
-  minPricePerNight?: number;
+  minPriceAmount?: number;
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(0)
   @Max(2_147_483_647)
-  maxPricePerNight?: number;
+  maxPriceAmount?: number;
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(2_147_483_647)
-  maxGuests?: number;
+  maxOccupants?: number;
+  @IsOptional() @IsEnum(PricePeriod) pricePeriod?: PricePeriod;
+  @IsOptional() @IsEnum(RentalDuration) rentalDuration?: RentalDuration;
+  @IsOptional() @IsEnum(Currency) currency?: Currency;
   @IsOptional()
   @Transform(({ value }) => {
     if (value === true || value === 'true') return true;
@@ -53,8 +58,12 @@ export class PublicListingDto {
   title!: string;
   description!: string;
   location!: string;
-  pricePerNight!: number;
-  maxGuests!: number;
+  priceAmount!: number | null;
+  pricePeriod!: PricePeriod | null;
+  rentalDuration!: RentalDuration | null;
+  maxOccupants!: number | null;
+  currency!: Currency | null;
+  domainDataStatus!: 'COMPLETE' | 'MISSING';
   images!: PublicListingImageDto[];
   availabilityStatus!: 'AVAILABLE' | 'UNAVAILABLE';
   lastConfirmedAt!: Date | null;

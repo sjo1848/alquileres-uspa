@@ -109,21 +109,42 @@ describe('ListingsService ownership', () => {
   it('updates only the owner draft with an atomic where clause', async () => {
     (prisma as any).listing.updateMany.mockResolvedValue({ count: 1 });
     (prisma as any).listing.findFirst.mockResolvedValue(listing);
-    await service.update('owner-a', 'l1', { title: 'x' });
+    await service.update('owner-a', 'l1', {
+      title: 'x',
+      priceAmount: 100,
+      pricePeriod: 'WEEK',
+      rentalDuration: 'MONTHS',
+      maxOccupants: 2,
+      currency: 'ARS',
+    });
     expect((prisma as any).listing.updateMany).toHaveBeenCalledWith({
       where: {
         id: 'l1',
         ownerId: 'owner-a',
         status: { in: ['DRAFT', 'REJECTED'] },
       },
-      data: { title: 'x' },
+      data: {
+        title: 'x',
+        priceAmount: 100,
+        pricePeriod: 'WEEK',
+        rentalDuration: 'MONTHS',
+        maxOccupants: 2,
+        currency: 'ARS',
+      },
     });
   });
 
   it('translates an atomic update miss to NotFoundException', async () => {
     (prisma as any).listing.updateMany.mockResolvedValue({ count: 0 });
     await expect(
-      service.update('owner-a', 'l1', { title: 'x' }),
+      service.update('owner-a', 'l1', {
+        title: 'x',
+        priceAmount: 100,
+        pricePeriod: 'WEEK',
+        rentalDuration: 'MONTHS',
+        maxOccupants: 2,
+        currency: 'ARS',
+      }),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
@@ -171,8 +192,11 @@ describe('ListingsService ownership', () => {
       title: 'x',
       description: '',
       location: 'Uspallata',
-      pricePerNight: 100,
-      maxGuests: 2,
+      priceAmount: 100,
+      pricePeriod: 'WEEK',
+      rentalDuration: 'MONTHS',
+      maxOccupants: 2,
+      currency: 'ARS',
     });
     expect((prisma as any).listing.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ ownerId: 'owner-a', status: 'DRAFT' }),
@@ -183,14 +207,28 @@ describe('ListingsService ownership', () => {
 
     (prisma as any).listing.updateMany.mockResolvedValue({ count: 1 });
     (prisma as any).listing.findFirst.mockResolvedValue(listing);
-    await service.update('owner-a', 'l1', { title: 'updated' });
+    await service.update('owner-a', 'l1', {
+      title: 'updated',
+      priceAmount: 100,
+      pricePeriod: 'WEEK',
+      rentalDuration: 'MONTHS',
+      maxOccupants: 2,
+      currency: 'ARS',
+    });
     expect((prisma as any).listing.updateMany).toHaveBeenCalledWith({
       where: {
         id: 'l1',
         ownerId: 'owner-a',
         status: { in: ['DRAFT', 'REJECTED'] },
       },
-      data: { title: 'updated' },
+      data: {
+        title: 'updated',
+        priceAmount: 100,
+        pricePeriod: 'WEEK',
+        rentalDuration: 'MONTHS',
+        maxOccupants: 2,
+        currency: 'ARS',
+      },
     });
   });
 
@@ -289,8 +327,11 @@ describe('ListingsService ownership', () => {
       title: 'x',
       description: '',
       location: 'Uspallata',
-      pricePerNight: 100,
-      maxGuests: 2,
+      priceAmount: 100,
+      pricePeriod: 'WEEK',
+      rentalDuration: 'MONTHS',
+      maxOccupants: 2,
+      currency: 'ARS',
     });
     expect((prisma as any).listing.create).toHaveBeenCalledWith(
       expect.objectContaining({

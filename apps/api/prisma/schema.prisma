@@ -34,6 +34,23 @@ enum ContactEventState {
   READ
 }
 
+enum PricePeriod {
+  WEEK
+  MONTH
+}
+
+enum RentalDuration {
+  WEEKS
+  MONTHS
+  PERMANENT
+  FLEXIBLE
+}
+
+enum Currency {
+  ARS
+  USD
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -75,8 +92,11 @@ model Listing {
   title          String
   description    String
   location       String
-  pricePerNight  Int           @map("price_per_night")
-  maxGuests      Int           @map("max_guests")
+  priceAmount    Int?             @map("price_amount")
+  pricePeriod    PricePeriod?     @map("price_period")
+  rentalDuration RentalDuration?  @map("rental_duration")
+  maxOccupants   Int?             @map("max_occupants")
+  currency       Currency?
   status         ListingStatus @default(DRAFT)
   publicationStatus ListingPublicationStatus @default(UNPUBLISHED) @map("publication_status")
   availabilityStatus ListingAvailabilityStatus @default(AVAILABLE) @map("availability_status")

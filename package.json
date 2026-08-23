@@ -10,6 +10,7 @@
     "test": "pnpm -r test",
     "security:check": "node scripts/security-check.mjs",
     "migration:evidence": "node scripts/i11-migration-evidence.mjs",
+    "i13:migration:evidence": "node scripts/i13-migration-evidence.mjs",
     "i11:acceptance-seed": "node scripts/i11-acceptance-seed.mjs",
     "i11:integration": "node scripts/i11-integration.mjs",
     "smoke": "node scripts/smoke.mjs",

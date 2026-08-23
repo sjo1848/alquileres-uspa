@@ -13,8 +13,12 @@ describe('public listings catalog', () => {
     title: 'Cabaña',
     description: 'Descripción',
     location: 'Uspallata',
-    pricePerNight: 100,
-    maxGuests: 4,
+    priceAmount: 100,
+    pricePeriod: 'WEEK',
+    rentalDuration: 'MONTHS',
+    maxOccupants: 4,
+    currency: 'ARS',
+    domainDataStatus: 'COMPLETE',
     availabilityStatus: 'AVAILABLE',
     lastConfirmedAt: new Date(),
     freshnessStatus: 'FRESH',
@@ -58,22 +62,26 @@ describe('public listings catalog', () => {
     prisma.listing.findMany.mockResolvedValue([]);
     prisma.listing.count.mockResolvedValue(0);
     await service.listPublic({
-      minPricePerNight: 50,
-      maxPricePerNight: 200,
-      maxGuests: 3,
+      minPriceAmount: 50,
+      maxPriceAmount: 200,
+      maxOccupants: 3,
+      pricePeriod: 'WEEK',
+      currency: 'ARS',
       page: 1,
       pageSize: 20,
     });
     expect(prisma.listing.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          pricePerNight: { gte: 50, lte: 200 },
-          maxGuests: { gte: 3 },
+          priceAmount: { gte: 50, lte: 200 },
+          maxOccupants: { gte: 3 },
+          pricePeriod: 'WEEK',
+          currency: 'ARS',
         }),
       }),
     );
     await expect(
-      service.listPublic({ minPricePerNight: 201, maxPricePerNight: 200 }),
+      service.listPublic({ minPriceAmount: 201, maxPriceAmount: 200 }),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
@@ -93,6 +101,25 @@ describe('public listings catalog', () => {
     expect(result).not.toHaveProperty('status');
     expect(result).not.toHaveProperty('publicationStatus');
     expect(result.images[0]).not.toHaveProperty('objectKey');
+  });
+
+  it('marks legacy rows as missing domain data without inventing values', async () => {
+    prisma.listing.findFirst.mockResolvedValue({
+      ...published,
+      priceAmount: null,
+      pricePeriod: null,
+      rentalDuration: null,
+      maxOccupants: null,
+      currency: null,
+    });
+    await expect(service.getPublic('legacy-1')).resolves.toMatchObject({
+      priceAmount: null,
+      pricePeriod: null,
+      rentalDuration: null,
+      maxOccupants: null,
+      currency: null,
+      domainDataStatus: 'MISSING',
+    });
   });
 
   it('keeps availability filtering opt-in and filters only available listings', async () => {

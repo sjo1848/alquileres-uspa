@@ -14,8 +14,11 @@ describe('I08 assisted listings transaction boundaries', () => {
     title: 'Casa',
     description: 'Desc',
     location: 'Uspallata',
-    pricePerNight: 100,
-    maxGuests: 2,
+    priceAmount: 100,
+    pricePeriod: 'WEEK',
+    rentalDuration: 'MONTHS',
+    maxOccupants: 2,
+    currency: 'ARS',
   };
   const root = { $transaction: vi.fn(), $queryRaw: vi.fn() } as any;
   const tx = {
@@ -67,7 +70,15 @@ describe('I08 assisted listings transaction boundaries', () => {
     ],
     [
       'update',
-      () => service.updateAssisted(admin, 'listing-1', { title: 'Nuevo' }),
+      () =>
+        service.updateAssisted(admin, 'listing-1', {
+          title: 'Nuevo',
+          priceAmount: 100,
+          pricePeriod: 'WEEK',
+          rentalDuration: 'MONTHS',
+          maxOccupants: 2,
+          currency: 'ARS',
+        }),
       'ADMIN_ASSISTED_LISTING_UPDATED',
     ],
     [
@@ -107,7 +118,15 @@ describe('I08 assisted listings transaction boundaries', () => {
   it.each([
     [
       'update',
-      () => service.updateAssisted(admin, 'listing-1', { title: 'x' }),
+      () =>
+        service.updateAssisted(admin, 'listing-1', {
+          title: 'x',
+          priceAmount: 100,
+          pricePeriod: 'WEEK',
+          rentalDuration: 'MONTHS',
+          maxOccupants: 2,
+          currency: 'ARS',
+        }),
     ],
     [
       'availability',
@@ -312,7 +331,14 @@ describe('I08 assisted listings transaction boundaries', () => {
       owner: { role: Role.ADMIN },
     });
     await expect(
-      service.updateAssisted(admin, 'listing-1', { title: 'x' }),
+      service.updateAssisted(admin, 'listing-1', {
+        title: 'x',
+        priceAmount: 100,
+        pricePeriod: 'WEEK',
+        rentalDuration: 'MONTHS',
+        maxOccupants: 2,
+        currency: 'ARS',
+      }),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 

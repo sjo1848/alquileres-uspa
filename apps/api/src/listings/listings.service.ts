@@ -34,8 +34,11 @@ const PUBLIC_LISTING_SELECT = {
   title: true,
   description: true,
   location: true,
-  pricePerNight: true,
-  maxGuests: true,
+  priceAmount: true,
+  pricePeriod: true,
+  rentalDuration: true,
+  maxOccupants: true,
+  currency: true,
   availabilityStatus: true,
   lastConfirmedAt: true,
   images: {
@@ -49,8 +52,11 @@ const ADMIN_LISTING_SELECT = {
   title: true,
   description: true,
   location: true,
-  pricePerNight: true,
-  maxGuests: true,
+  priceAmount: true,
+  pricePeriod: true,
+  rentalDuration: true,
+  maxOccupants: true,
+  currency: true,
   status: true,
   publicationStatus: true,
   availabilityStatus: true,
@@ -92,12 +98,12 @@ export class ListingsService {
     query: PublicListingsQueryDto,
   ): Promise<PublicListingsPageDto> {
     if (
-      query.minPricePerNight !== undefined &&
-      query.maxPricePerNight !== undefined &&
-      query.minPricePerNight > query.maxPricePerNight
+      query.minPriceAmount !== undefined &&
+      query.maxPriceAmount !== undefined &&
+      query.minPriceAmount > query.maxPriceAmount
     )
       throw new BadRequestException(
-        'minPricePerNight cannot exceed maxPricePerNight',
+        'minPriceAmount cannot exceed maxPriceAmount',
       );
 
     const page = query.page ?? 1;
@@ -111,22 +117,27 @@ export class ListingsService {
       ...(query.availableOnly
         ? { availabilityStatus: ListingAvailabilityStatus.AVAILABLE }
         : {}),
-      ...(query.maxGuests !== undefined
-        ? { maxGuests: { gte: query.maxGuests } }
+      ...(query.maxOccupants !== undefined
+        ? { maxOccupants: { gte: query.maxOccupants } }
         : {}),
-      ...(query.minPricePerNight !== undefined ||
-      query.maxPricePerNight !== undefined
+      ...(query.minPriceAmount !== undefined ||
+      query.maxPriceAmount !== undefined
         ? {
-            pricePerNight: {
-              ...(query.minPricePerNight !== undefined
-                ? { gte: query.minPricePerNight }
+            priceAmount: {
+              ...(query.minPriceAmount !== undefined
+                ? { gte: query.minPriceAmount }
                 : {}),
-              ...(query.maxPricePerNight !== undefined
-                ? { lte: query.maxPricePerNight }
+              ...(query.maxPriceAmount !== undefined
+                ? { lte: query.maxPriceAmount }
                 : {}),
             },
           }
         : {}),
+      ...(query.pricePeriod !== undefined ? { pricePeriod: query.pricePeriod } : {}),
+      ...(query.rentalDuration !== undefined
+        ? { rentalDuration: query.rentalDuration }
+        : {}),
+      ...(query.currency !== undefined ? { currency: query.currency } : {}),
     };
     const [items, totalItems] = await Promise.all([
       this.prisma.listing.findMany({
@@ -185,8 +196,11 @@ export class ListingsService {
     title: string;
     description: string;
     location: string;
-    pricePerNight: number;
-    maxGuests: number;
+    priceAmount: number | null;
+    pricePeriod: 'WEEK' | 'MONTH' | null;
+    rentalDuration: 'WEEKS' | 'MONTHS' | 'PERMANENT' | 'FLEXIBLE' | null;
+    maxOccupants: number | null;
+    currency: 'ARS' | 'USD' | null;
     availabilityStatus: ListingAvailabilityStatus;
     lastConfirmedAt: Date | null;
     images: Array<{
@@ -201,8 +215,19 @@ export class ListingsService {
       title: listing.title,
       description: listing.description,
       location: listing.location,
-      pricePerNight: listing.pricePerNight,
-      maxGuests: listing.maxGuests,
+      priceAmount: listing.priceAmount,
+      pricePeriod: listing.pricePeriod,
+      rentalDuration: listing.rentalDuration,
+      maxOccupants: listing.maxOccupants,
+      currency: listing.currency,
+      domainDataStatus:
+        listing.priceAmount !== null &&
+        listing.pricePeriod !== null &&
+        listing.rentalDuration !== null &&
+        listing.maxOccupants !== null &&
+        listing.currency !== null
+          ? 'COMPLETE'
+          : 'MISSING',
       availabilityStatus: listing.availabilityStatus,
       lastConfirmedAt: listing.lastConfirmedAt,
       freshnessStatus: listing.lastConfirmedAt
@@ -250,8 +275,11 @@ export class ListingsService {
         title: true,
         description: true,
         location: true,
-        pricePerNight: true,
-        maxGuests: true,
+        priceAmount: true,
+        pricePeriod: true,
+        rentalDuration: true,
+        maxOccupants: true,
+        currency: true,
         status: true,
         publicationStatus: true,
         availabilityStatus: true,
@@ -463,7 +491,22 @@ export class ListingsService {
   }
 
   async update(ownerId: string, id: string, input: UpdateListingDto) {
+    this.assertDomainFields(input);
     return this.updateOnDb(this.prisma, ownerId, id, input);
+  }
+
+  private assertDomainFields(input: UpdateListingDto) {
+    const required = [
+      'priceAmount',
+      'pricePeriod',
+      'rentalDuration',
+      'maxOccupants',
+      'currency',
+    ] as const;
+    if (required.some((field) => input[field] === undefined))
+      throw new BadRequestException(
+        'priceAmount, pricePeriod, rentalDuration, maxOccupants and currency are required',
+      );
   }
 
   private async updateOnDb(
@@ -512,6 +555,7 @@ export class ListingsService {
 
   async updateAssisted(actor: AuthUser, id: string, input: UpdateListingDto) {
     this.assertAdmin(actor);
+    this.assertDomainFields(input);
     return this.withListingLock(id, async (db) => {
       const listing = await this.findAssistedListing(db, id);
       const result = await this.updateOnDb(db, listing.ownerId, id, input);

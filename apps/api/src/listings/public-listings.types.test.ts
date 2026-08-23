@@ -27,22 +27,22 @@ describe('PublicListingsQueryDto', () => {
 
   it('rejects values above the Prisma/PostgreSQL Int32 maximum', async () => {
     const valid = plainToInstance(PublicListingsQueryDto, {
-      minPricePerNight: 2_147_483_647,
-      maxPricePerNight: 2_147_483_647,
-      maxGuests: 2_147_483_647,
+      minPriceAmount: 2_147_483_647,
+      maxPriceAmount: 2_147_483_647,
+      maxOccupants: 2_147_483_647,
     });
     const invalid = plainToInstance(PublicListingsQueryDto, {
-      minPricePerNight: 2_147_483_648,
-      maxPricePerNight: 2_147_483_648,
-      maxGuests: 2_147_483_648,
+      minPriceAmount: 2_147_483_648,
+      maxPriceAmount: 2_147_483_648,
+      maxOccupants: 2_147_483_648,
     });
 
     expect(await validate(valid)).toHaveLength(0);
     expect(await validate(invalid)).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ property: 'minPricePerNight' }),
-        expect.objectContaining({ property: 'maxPricePerNight' }),
-        expect.objectContaining({ property: 'maxGuests' }),
+        expect.objectContaining({ property: 'minPriceAmount' }),
+        expect.objectContaining({ property: 'maxPriceAmount' }),
+        expect.objectContaining({ property: 'maxOccupants' }),
       ]),
     );
   });
