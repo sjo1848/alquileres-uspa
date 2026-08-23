@@ -10,14 +10,24 @@ import {
   type AvailabilityStatus,
   type FreshnessStatus,
 } from './availability-helpers';
+import {
+  formatRentalPrice,
+  rentalDurationLabel,
+  type Currency,
+  type PricePeriod,
+  type RentalDuration,
+} from './rental-domain';
 const route = useRoute();
 type Listing = {
   id: string;
   title: string;
   description: string;
   location: string;
-  pricePerNight: number;
-  maxGuests: number;
+  priceAmount: number | null;
+  pricePeriod: PricePeriod | null;
+  rentalDuration: RentalDuration | null;
+  maxOccupants: number | null;
+  currency: Currency | null;
   availabilityStatus: AvailabilityStatus;
   lastConfirmedAt: string | null;
   freshnessStatus: FreshnessStatus;
@@ -139,9 +149,9 @@ watch(
         <span>Sin imágenes disponibles</span>
       </div>
       <p>{{ listing.description }}</p>
-      <p>
-        <strong>${{ listing.pricePerNight }}</strong> por noche · hasta
-        {{ listing.maxGuests }} huéspedes
+      <p class="rental-summary">{{ formatRentalPrice(listing) }}</p>
+      <p v-if="listing.rentalDuration">
+        Duración: {{ rentalDurationLabel(listing.rentalDuration) }}
       </p>
       <p
         class="status"

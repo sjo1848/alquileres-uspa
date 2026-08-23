@@ -8,15 +8,21 @@ export function editableListingPayload(input: {
   title?: string;
   description?: string;
   location?: string;
-  pricePerNight?: number;
-  maxGuests?: number;
+  priceAmount?: number;
+  pricePeriod?: 'WEEK' | 'MONTH';
+  rentalDuration?: 'WEEKS' | 'MONTHS' | 'PERMANENT' | 'FLEXIBLE';
+  maxOccupants?: number;
+  currency?: 'ARS' | 'USD';
 }) {
   return {
     title: input.title,
     description: input.description,
     location: input.location,
-    pricePerNight: input.pricePerNight,
-    maxGuests: input.maxGuests,
+    priceAmount: input.priceAmount,
+    pricePeriod: input.pricePeriod,
+    rentalDuration: input.rentalDuration,
+    maxOccupants: input.maxOccupants,
+    currency: input.currency,
   };
 }
 

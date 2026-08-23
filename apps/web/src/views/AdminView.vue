@@ -8,6 +8,15 @@ import {
   editableListingPayload,
 } from './area-helpers';
 import { formatConfirmationDate } from './availability-helpers';
+import {
+  currencyOptions,
+  formatRentalPrice,
+  pricePeriodOptions,
+  rentalDurationOptions,
+  type Currency,
+  type PricePeriod,
+  type RentalDuration,
+} from './rental-domain';
 
 type Status = 'DRAFT' | 'SUBMITTED' | 'REJECTED' | 'APPROVED';
 type Availability = 'AVAILABLE' | 'UNAVAILABLE';
@@ -24,8 +33,11 @@ type Listing = {
   title: string;
   description: string;
   location: string;
-  pricePerNight: number;
-  maxGuests: number;
+  priceAmount: number | null;
+  pricePeriod: PricePeriod | null;
+  rentalDuration: RentalDuration | null;
+  maxOccupants: number | null;
+  currency: Currency | null;
   status: Status;
   publicationStatus: 'UNPUBLISHED' | 'PUBLISHED';
   availabilityStatus: Availability;
@@ -64,8 +76,11 @@ const form = reactive({
   title: '',
   description: '',
   location: '',
-  pricePerNight: 0,
-  maxGuests: 1,
+  priceAmount: 0,
+  pricePeriod: 'MONTH' as PricePeriod,
+  rentalDuration: 'FLEXIBLE' as RentalDuration,
+  maxOccupants: 1,
+  currency: 'ARS' as Currency,
   ownerId: '',
 });
 const selectionGuard = createSelectionGuard();
@@ -96,8 +111,11 @@ function setForm(listing: Listing | null) {
           title: '',
           description: '',
           location: '',
-          pricePerNight: 0,
-          maxGuests: 1,
+          priceAmount: 0,
+          pricePeriod: 'MONTH',
+          rentalDuration: 'FLEXIBLE',
+          maxOccupants: 1,
+          currency: 'ARS',
           ownerId: owners.value[0]?.id ?? '',
         },
   );
@@ -363,10 +381,7 @@ onMounted(() => {
           <div class="admin-detail">
             <h3>{{ selected.title }}</h3>
             <p>{{ selected.description }}</p>
-            <p>
-              {{ selected.location }} · ${{ selected.pricePerNight }} por noche
-              · {{ selected.maxGuests }} huéspedes
-            </p>
+            <p>{{ selected.location }} · {{ formatRentalPrice(selected) }}</p>
           </div>
           <section class="subsection">
             <h3>Imágenes disponibles</h3>
@@ -443,13 +458,37 @@ onMounted(() => {
               </label>
               <div class="form-row">
                 <label
-                  >Precio<input
-                    v-model.number="form.pricePerNight"
+                  >Importe<input
+                    v-model.number="form.priceAmount"
                     type="number"
-                    min="0" /></label
+                    min="1" /></label
                 ><label
-                  >Huéspedes<input
-                    v-model.number="form.maxGuests"
+                  >Moneda<select v-model="form.currency">
+                    <option
+                      v-for="option in currencyOptions"
+                      :key="option.value"
+                      :value="option.value"
+                    >{{ option.label }}</option>
+                  </select></label
+                ><label
+                  >Periodicidad<select v-model="form.pricePeriod">
+                    <option
+                      v-for="option in pricePeriodOptions"
+                      :key="option.value"
+                      :value="option.value"
+                    >{{ option.label }}</option>
+                  </select></label
+                ><label
+                  >Duración<select v-model="form.rentalDuration">
+                    <option
+                      v-for="option in rentalDurationOptions"
+                      :key="option.value"
+                      :value="option.value"
+                    >{{ option.label }}</option>
+                  </select></label
+                ><label
+                  >Ocupantes máximos<input
+                    v-model.number="form.maxOccupants"
                     type="number"
                     min="1"
                 /></label>
@@ -562,14 +601,38 @@ onMounted(() => {
         </label>
         <div class="form-row">
           <label
-            >Precio<input
-              v-model.number="form.pricePerNight"
+            >Importe<input
+              v-model.number="form.priceAmount"
               required
               type="number"
-              min="0" /></label
+              min="1" /></label
           ><label
-            >Huéspedes<input
-              v-model.number="form.maxGuests"
+            >Moneda<select v-model="form.currency" required>
+              <option
+                v-for="option in currencyOptions"
+                :key="option.value"
+                :value="option.value"
+              >{{ option.label }}</option>
+            </select></label
+          ><label
+            >Periodicidad<select v-model="form.pricePeriod" required>
+              <option
+                v-for="option in pricePeriodOptions"
+                :key="option.value"
+                :value="option.value"
+              >{{ option.label }}</option>
+            </select></label
+          ><label
+            >Duración<select v-model="form.rentalDuration" required>
+              <option
+                v-for="option in rentalDurationOptions"
+                :key="option.value"
+                :value="option.value"
+              >{{ option.label }}</option>
+            </select></label
+          ><label
+            >Ocupantes máximos<input
+              v-model.number="form.maxOccupants"
               required
               type="number"
               min="1"

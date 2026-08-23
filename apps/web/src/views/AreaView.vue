@@ -16,6 +16,14 @@ import {
   type ContactEventsResponse,
 } from './contact-helpers';
 import { formatConfirmationDate } from './availability-helpers';
+import {
+  currencyOptions,
+  pricePeriodOptions,
+  rentalDurationOptions,
+  type Currency,
+  type PricePeriod,
+  type RentalDuration,
+} from './rental-domain';
 
 type Status = 'DRAFT' | 'SUBMITTED' | 'REJECTED' | 'APPROVED';
 type Availability = 'AVAILABLE' | 'UNAVAILABLE';
@@ -24,8 +32,11 @@ type Listing = {
   title: string;
   description: string;
   location: string;
-  pricePerNight: number;
-  maxGuests: number;
+  priceAmount: number | null;
+  pricePeriod: PricePeriod | null;
+  rentalDuration: RentalDuration | null;
+  maxOccupants: number | null;
+  currency: Currency | null;
   status: Status;
   availabilityStatus: Availability;
   lastConfirmedAt: string | null;
@@ -62,8 +73,11 @@ const form = reactive({
   title: '',
   description: '',
   location: '',
-  pricePerNight: 0,
-  maxGuests: 1,
+  priceAmount: 0,
+  pricePeriod: 'MONTH' as PricePeriod,
+  rentalDuration: 'FLEXIBLE' as RentalDuration,
+  maxOccupants: 1,
+  currency: 'ARS' as Currency,
 });
 const message = (e: unknown) =>
   e instanceof Error ? e.message : 'No pudimos completar la operación.';
@@ -113,8 +127,11 @@ const editablePayload = () => ({
   title: form.title,
   description: form.description,
   location: form.location,
-  pricePerNight: form.pricePerNight,
-  maxGuests: form.maxGuests,
+  priceAmount: form.priceAmount,
+  pricePeriod: form.pricePeriod,
+  rentalDuration: form.rentalDuration,
+  maxOccupants: form.maxOccupants,
+  currency: form.currency,
 });
 function fill(item: Listing, internal = false) {
   if ((saving.value || imageBusy.value) && !internal) return;
@@ -387,8 +404,11 @@ async function deleteSelected() {
         title: '',
         description: '',
         location: '',
-        pricePerNight: 0,
-        maxGuests: 1,
+        priceAmount: 0,
+        pricePeriod: 'MONTH',
+        rentalDuration: 'FLEXIBLE',
+        maxOccupants: 1,
+        currency: 'ARS',
       });
     },
   );
@@ -575,14 +595,38 @@ onMounted(() => {
             /></label>
             <div class="form-row">
               <label
-                >Precio por noche<input
-                  v-model.number="form.pricePerNight"
+                >Importe<input
+                  v-model.number="form.priceAmount"
                   type="number"
-                  min="0"
+                  min="1"
                   required /></label
               ><label
-                >Huéspedes<input
-                  v-model.number="form.maxGuests"
+                >Moneda<select v-model="form.currency" required>
+                  <option
+                    v-for="option in currencyOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >{{ option.label }}</option>
+                </select></label
+              ><label
+                >Periodicidad<select v-model="form.pricePeriod" required>
+                  <option
+                    v-for="option in pricePeriodOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >{{ option.label }}</option>
+                </select></label
+              ><label
+                >Duración<select v-model="form.rentalDuration" required>
+                  <option
+                    v-for="option in rentalDurationOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >{{ option.label }}</option>
+                </select></label
+              ><label
+                >Ocupantes máximos<input
+                  v-model.number="form.maxOccupants"
                   type="number"
                   min="1"
                   required

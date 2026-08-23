@@ -52,24 +52,38 @@ describe('web foundation', () => {
       title: 'Casa',
       description: 'Descripción',
       location: 'Uspallata',
-      pricePerNight: 100,
-      maxGuests: 4,
+      priceAmount: 100,
+      pricePeriod: 'WEEK',
+      rentalDuration: 'WEEKS',
+      maxOccupants: 4,
+      currency: 'ARS',
     };
-    const payload = editableListingPayload(listing);
+    const payload = editableListingPayload({
+      ...listing,
+      pricePeriod: 'WEEK' as const,
+      rentalDuration: 'WEEKS' as const,
+      currency: 'ARS' as const,
+    });
 
     expect(Object.keys(payload).sort()).toEqual([
+      'currency',
       'description',
       'location',
-      'maxGuests',
-      'pricePerNight',
+      'maxOccupants',
+      'priceAmount',
+      'pricePeriod',
+      'rentalDuration',
       'title',
     ]);
     expect(payload).toEqual({
       title: 'Casa',
       description: 'Descripción',
       location: 'Uspallata',
-      pricePerNight: 100,
-      maxGuests: 4,
+      priceAmount: 100,
+      pricePeriod: 'WEEK',
+      rentalDuration: 'WEEKS',
+      maxOccupants: 4,
+      currency: 'ARS',
     });
     expect(payload).not.toHaveProperty('id');
     expect(payload).not.toHaveProperty('ownerId');

@@ -75,6 +75,12 @@ main {
 .listing-card p {
   margin: 0.25rem 0;
 }
+.rental-summary {
+  font-weight: 700;
+}
+.rental-summary:has(+ p) {
+  margin-bottom: 0;
+}
 .image-placeholder {
   min-height: 8rem;
   display: grid;

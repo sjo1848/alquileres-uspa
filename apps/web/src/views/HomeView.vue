@@ -9,6 +9,14 @@ import {
   type AvailabilityStatus,
   type FreshnessStatus,
 } from './availability-helpers';
+import {
+  formatRentalPrice,
+  hasRentalDomainData,
+  rentalDurationLabel,
+  type Currency,
+  type PricePeriod,
+  type RentalDuration,
+} from './rental-domain';
 
 type Image = { id: string; contentType: string };
 type Listing = {
@@ -16,8 +24,11 @@ type Listing = {
   title: string;
   description: string;
   location: string;
-  pricePerNight: number;
-  maxGuests: number;
+  priceAmount: number | null;
+  pricePeriod: PricePeriod | null;
+  rentalDuration: RentalDuration | null;
+  maxOccupants: number | null;
+  currency: Currency | null;
   images: Image[];
   availabilityStatus: AvailabilityStatus;
   lastConfirmedAt: string | null;
@@ -32,9 +43,10 @@ type Page = {
 };
 const filters = reactive({
   location: '',
-  minPricePerNight: '',
-  maxPricePerNight: '',
-  maxGuests: '',
+  minPriceAmount: '',
+  maxPriceAmount: '',
+  currency: '' as Currency | '',
+  maxOccupants: '',
   soloDisponibles: false,
 });
 const page = ref<Page | null>(null);
@@ -47,9 +59,10 @@ const query = (pageNumber: number) =>
   new URLSearchParams(
     Object.entries({
       location: filters.location,
-      minPricePerNight: filters.minPricePerNight,
-      maxPricePerNight: filters.maxPricePerNight,
-      maxGuests: filters.maxGuests,
+      minPriceAmount: filters.minPriceAmount,
+      maxPriceAmount: filters.maxPriceAmount,
+      currency: filters.currency,
+      maxOccupants: filters.maxOccupants,
       ...availabilityQuery(filters.soloDisponibles),
       page: pageNumber,
       pageSize,
@@ -80,9 +93,10 @@ function imageFailed(listingId: string) {
 }
 function resetFilters() {
   filters.location = '';
-  filters.minPricePerNight = '';
-  filters.maxPricePerNight = '';
-  filters.maxGuests = '';
+  filters.minPriceAmount = '';
+  filters.maxPriceAmount = '';
+  filters.currency = '';
+  filters.maxOccupants = '';
   filters.soloDisponibles = false;
   void search();
 }
@@ -91,13 +105,13 @@ void search();
 <template>
   <section class="hero">
     <p class="eyebrow">BUSCADOR</p>
-    <h2>Encontrá tu próxima estadía</h2>
+    <h2>Encontrá tu próximo alquiler</h2>
     <p>
-      Alquileres publicados en Uspallata, con información de disponibilidad.
+      Publicaciones en Uspallata, con información de disponibilidad.
     </p>
   </section>
   <form class="filters card" @submit.prevent="search()">
-    <h3>Filtrar alojamientos</h3>
+    <h3>Filtrar publicaciones</h3>
     <label
       >Ubicación
       <input
@@ -106,24 +120,35 @@ void search();
         autocomplete="address-level2"
     /></label>
     <label
-      >Precio mínimo por noche
+      >Importe mínimo
       <input
-        v-model="filters.minPricePerNight"
-        name="minPricePerNight"
+        v-model="filters.minPriceAmount"
+        name="minPriceAmount"
         type="number"
         min="0"
     /></label>
     <label
-      >Precio máximo por noche
+      >Importe máximo
       <input
-        v-model="filters.maxPricePerNight"
-        name="maxPricePerNight"
+        v-model="filters.maxPriceAmount"
+        name="maxPriceAmount"
         type="number"
         min="0"
     /></label>
     <label
-      >Huéspedes máximos
-      <input v-model="filters.maxGuests" name="maxGuests" type="number" min="1"
+      >Moneda<select v-model="filters.currency" name="currency">
+        <option value="">Cualquier moneda</option>
+        <option value="ARS">Pesos argentinos (ARS)</option>
+        <option value="USD">Dólares estadounidenses (USD)</option>
+      </select></label
+    >
+    <label
+      >Ocupantes máximos
+      <input
+        v-model="filters.maxOccupants"
+        name="maxOccupants"
+        type="number"
+        min="1"
     /></label>
     <label class="availability-filter">
       <input
@@ -154,18 +179,18 @@ void search();
       Reintentar búsqueda
     </button>
   </div>
-  <p v-if="loading" aria-live="polite">Cargando alojamientos…</p>
+  <p v-if="loading" aria-live="polite">Cargando publicaciones…</p>
   <template v-else-if="page">
     <p aria-live="polite">
-      {{ page.totalItems }} alojamiento{{
+      {{ page.totalItems }} publicación{{
         page.totalItems === 1 ? '' : 's'
       }}
       encontrado{{ page.totalItems === 1 ? '' : 's' }}.
     </p>
-    <section
+      <section
       v-if="page.items.length"
       class="listing-grid"
-      aria-label="Alojamientos publicados"
+        aria-label="Publicaciones disponibles"
     >
       <article
         v-for="listing in page.items"
@@ -193,9 +218,9 @@ void search();
         <p class="eyebrow">{{ listing.location }}</p>
         <h3>{{ listing.title }}</h3>
         <p>{{ listing.description }}</p>
-        <p>
-          <strong>${{ listing.pricePerNight }}</strong> por noche · hasta
-          {{ listing.maxGuests }} huéspedes
+        <p class="rental-summary">{{ formatRentalPrice(listing) }}</p>
+        <p v-if="hasRentalDomainData(listing)">
+          Duración: {{ rentalDurationLabel(listing.rentalDuration) }}
         </p>
         <div class="availability-summary" aria-label="Disponibilidad">
           <p
@@ -234,7 +259,7 @@ void search();
       </article>
     </section>
     <p v-else class="card" role="status">
-      No encontramos alojamientos con esos filtros.
+      No encontramos publicaciones con esos filtros.
     </p>
     <nav
       v-if="page.totalPages > 1"
