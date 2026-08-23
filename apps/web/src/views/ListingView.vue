@@ -12,6 +12,7 @@ import {
 } from './availability-helpers';
 import {
   formatRentalPrice,
+  hasRentalDomainData,
   rentalDurationLabel,
   type Currency,
   type PricePeriod,
@@ -28,6 +29,7 @@ type Listing = {
   rentalDuration: RentalDuration | null;
   maxOccupants: number | null;
   currency: Currency | null;
+  domainDataStatus: 'COMPLETE' | 'MISSING';
   availabilityStatus: AvailabilityStatus;
   lastConfirmedAt: string | null;
   freshnessStatus: FreshnessStatus;
@@ -150,7 +152,12 @@ watch(
       </div>
       <p>{{ listing.description }}</p>
       <p class="rental-summary">{{ formatRentalPrice(listing) }}</p>
-      <p v-if="listing.rentalDuration">
+      <p
+        v-if="
+          listing.domainDataStatus === 'COMPLETE' &&
+          hasRentalDomainData(listing)
+        "
+      >
         Duración: {{ rentalDurationLabel(listing.rentalDuration) }}
       </p>
       <p

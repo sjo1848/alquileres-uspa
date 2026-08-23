@@ -8,7 +8,8 @@
 }
 body {
   margin: 0;
-  min-width: 320px;
+  min-width: 0;
+  overflow-x: hidden;
 }
 header,
 main,
@@ -221,11 +222,15 @@ form {
   max-width: 28rem;
 }
 input,
+select,
+textarea,
 button {
   font: inherit;
   padding: 0.7rem;
   border: 1px solid #8ea3b5;
   border-radius: 0.4rem;
+  min-width: 0;
+  max-width: 100%;
 }
 button {
   color: #fff;
@@ -505,7 +510,7 @@ footer {
     width: 100%;
   }
   .filters {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .filters button {
     width: 100%;

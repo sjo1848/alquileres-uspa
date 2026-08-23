@@ -11,7 +11,8 @@ import {
 } from './availability-helpers';
 import {
   formatRentalPrice,
-  hasRentalDomainData,
+  pricePeriodOptions,
+  rentalDurationOptions,
   rentalDurationLabel,
   type Currency,
   type PricePeriod,
@@ -29,6 +30,7 @@ type Listing = {
   rentalDuration: RentalDuration | null;
   maxOccupants: number | null;
   currency: Currency | null;
+  domainDataStatus: 'COMPLETE' | 'MISSING';
   images: Image[];
   availabilityStatus: AvailabilityStatus;
   lastConfirmedAt: string | null;
@@ -46,6 +48,8 @@ const filters = reactive({
   minPriceAmount: '',
   maxPriceAmount: '',
   currency: '' as Currency | '',
+  pricePeriod: '' as PricePeriod | '',
+  rentalDuration: '' as RentalDuration | '',
   maxOccupants: '',
   soloDisponibles: false,
 });
@@ -62,6 +66,8 @@ const query = (pageNumber: number) =>
       minPriceAmount: filters.minPriceAmount,
       maxPriceAmount: filters.maxPriceAmount,
       currency: filters.currency,
+      pricePeriod: filters.pricePeriod,
+      rentalDuration: filters.rentalDuration,
       maxOccupants: filters.maxOccupants,
       ...availabilityQuery(filters.soloDisponibles),
       page: pageNumber,
@@ -96,6 +102,8 @@ function resetFilters() {
   filters.minPriceAmount = '';
   filters.maxPriceAmount = '';
   filters.currency = '';
+  filters.pricePeriod = '';
+  filters.rentalDuration = '';
   filters.maxOccupants = '';
   filters.soloDisponibles = false;
   void search();
@@ -106,9 +114,7 @@ void search();
   <section class="hero">
     <p class="eyebrow">BUSCADOR</p>
     <h2>Encontrá tu próximo alquiler</h2>
-    <p>
-      Publicaciones en Uspallata, con información de disponibilidad.
-    </p>
+    <p>Publicaciones en Uspallata, con información de disponibilidad.</p>
   </section>
   <form class="filters card" @submit.prevent="search()">
     <h3>Filtrar publicaciones</h3>
@@ -140,6 +146,30 @@ void search();
         <option value="">Cualquier moneda</option>
         <option value="ARS">Pesos argentinos (ARS)</option>
         <option value="USD">Dólares estadounidenses (USD)</option>
+      </select></label
+    >
+    <label
+      >Periodicidad<select v-model="filters.pricePeriod" name="pricePeriod">
+        <option value="">Cualquier periodicidad</option>
+        <option
+          v-for="option in pricePeriodOptions"
+          :key="option.value"
+          :value="option.value"
+        >
+          {{ option.label }}
+        </option>
+      </select></label
+    >
+    <label
+      >Duración<select v-model="filters.rentalDuration" name="rentalDuration">
+        <option value="">Cualquier duración</option>
+        <option
+          v-for="option in rentalDurationOptions"
+          :key="option.value"
+          :value="option.value"
+        >
+          {{ option.label }}
+        </option>
       </select></label
     >
     <label
@@ -187,10 +217,10 @@ void search();
       }}
       encontrado{{ page.totalItems === 1 ? '' : 's' }}.
     </p>
-      <section
+    <section
       v-if="page.items.length"
       class="listing-grid"
-        aria-label="Publicaciones disponibles"
+      aria-label="Publicaciones disponibles"
     >
       <article
         v-for="listing in page.items"
@@ -219,7 +249,7 @@ void search();
         <h3>{{ listing.title }}</h3>
         <p>{{ listing.description }}</p>
         <p class="rental-summary">{{ formatRentalPrice(listing) }}</p>
-        <p v-if="hasRentalDomainData(listing)">
+        <p v-if="listing.domainDataStatus === 'COMPLETE'">
           Duración: {{ rentalDurationLabel(listing.rentalDuration) }}
         </p>
         <div class="availability-summary" aria-label="Disponibilidad">

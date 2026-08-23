@@ -8,6 +8,7 @@ export type RentalFields = {
   rentalDuration?: RentalDuration | null;
   maxOccupants?: number | null;
   currency?: Currency | null;
+  domainDataStatus?: 'COMPLETE' | 'MISSING';
 };
 type CompleteRentalFields = {
   priceAmount: number;
@@ -22,23 +23,25 @@ export function hasRentalDomainData(
 ): listing is CompleteRentalFields {
   return Boolean(
     listing &&
-      listing.priceAmount !== null &&
-      listing.priceAmount !== undefined &&
-      listing.pricePeriod &&
-      listing.rentalDuration &&
-      listing.maxOccupants !== null &&
-      listing.maxOccupants !== undefined &&
-      listing.currency,
+    listing.priceAmount !== null &&
+    listing.priceAmount !== undefined &&
+    listing.pricePeriod &&
+    listing.rentalDuration &&
+    listing.maxOccupants !== null &&
+    listing.maxOccupants !== undefined &&
+    listing.currency,
   );
 }
 
 export function formatRentalPrice(listing: RentalFields) {
   if (!hasRentalDomainData(listing)) return 'Datos de alquiler pendientes';
-  return `${new Intl.NumberFormat('es-AR', {
+  return `${listing.currency} ${new Intl.NumberFormat('es-AR', {
     style: 'currency',
     currency: listing.currency,
     maximumFractionDigits: 0,
-  }).format(listing.priceAmount)} por ${pricePeriodLabel(listing.pricePeriod)} · ${listing.maxOccupants} ocupantes`;
+  }).format(
+    listing.priceAmount,
+  )} por ${pricePeriodLabel(listing.pricePeriod)} · ${listing.maxOccupants} ocupantes`;
 }
 
 export function pricePeriodLabel(period: PricePeriod | null | undefined) {

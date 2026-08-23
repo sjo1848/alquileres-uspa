@@ -133,7 +133,9 @@ export class ListingsService {
             },
           }
         : {}),
-      ...(query.pricePeriod !== undefined ? { pricePeriod: query.pricePeriod } : {}),
+      ...(query.pricePeriod !== undefined
+        ? { pricePeriod: query.pricePeriod }
+        : {}),
       ...(query.rentalDuration !== undefined
         ? { rentalDuration: query.rentalDuration }
         : {}),

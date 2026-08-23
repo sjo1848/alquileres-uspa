@@ -3,6 +3,7 @@ import {
   IsOptional,
   IsString,
   MaxLength,
+  Max,
   Min,
   MinLength,
   IsEnum,
@@ -18,10 +19,10 @@ export class CreateListingDto {
   @IsString() @MinLength(1) @MaxLength(120) title!: string;
   @IsString() @MaxLength(5000) description!: string;
   @IsString() @MinLength(1) @MaxLength(240) location!: string;
-  @IsInt() @Min(0) priceAmount!: number;
+  @IsInt() @Min(0) @Max(2147483647) priceAmount!: number;
   @IsEnum(PricePeriod) pricePeriod!: PricePeriod;
   @IsEnum(RentalDuration) rentalDuration!: RentalDuration;
-  @IsInt() @Min(1) maxOccupants!: number;
+  @IsInt() @Min(1) @Max(2147483647) maxOccupants!: number;
   @IsEnum(Currency) currency!: Currency;
 }
 
@@ -29,10 +30,10 @@ export class UpdateListingDto {
   @IsOptional() @IsString() @MinLength(1) @MaxLength(120) title?: string;
   @IsOptional() @IsString() @MaxLength(5000) description?: string;
   @IsOptional() @IsString() @MinLength(1) @MaxLength(240) location?: string;
-  @IsInt() @Min(0) priceAmount!: number;
+  @IsInt() @Min(0) @Max(2147483647) priceAmount!: number;
   @IsEnum(PricePeriod) pricePeriod!: PricePeriod;
   @IsEnum(RentalDuration) rentalDuration!: RentalDuration;
-  @IsInt() @Min(1) maxOccupants!: number;
+  @IsInt() @Min(1) @Max(2147483647) maxOccupants!: number;
   @IsEnum(Currency) currency!: Currency;
 }
 

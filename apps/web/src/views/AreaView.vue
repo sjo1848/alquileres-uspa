@@ -606,7 +606,9 @@ onMounted(() => {
                     v-for="option in currencyOptions"
                     :key="option.value"
                     :value="option.value"
-                  >{{ option.label }}</option>
+                  >
+                    {{ option.label }}
+                  </option>
                 </select></label
               ><label
                 >Periodicidad<select v-model="form.pricePeriod" required>
@@ -614,7 +616,9 @@ onMounted(() => {
                     v-for="option in pricePeriodOptions"
                     :key="option.value"
                     :value="option.value"
-                  >{{ option.label }}</option>
+                  >
+                    {{ option.label }}
+                  </option>
                 </select></label
               ><label
                 >Duración<select v-model="form.rentalDuration" required>
@@ -622,7 +626,9 @@ onMounted(() => {
                     v-for="option in rentalDurationOptions"
                     :key="option.value"
                     :value="option.value"
-                  >{{ option.label }}</option>
+                  >
+                    {{ option.label }}
+                  </option>
                 </select></label
               ><label
                 >Ocupantes máximos<input

@@ -12,6 +12,12 @@ ALTER TABLE "listings"
   ADD COLUMN "max_occupants" INTEGER,
   ADD COLUMN "currency" "Currency";
 
+-- New domain rows must not be forced to invent tourist semantics. Historical
+-- values remain intact; future rows leave these quarantined columns NULL.
+ALTER TABLE "listings"
+  ALTER COLUMN "price_per_night" DROP NOT NULL,
+  ALTER COLUMN "max_guests" DROP NOT NULL;
+
 ALTER TABLE "listings"
   ADD CONSTRAINT "listings_price_amount_check"
     CHECK ("price_amount" IS NULL OR "price_amount" >= 0),

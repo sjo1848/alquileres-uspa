@@ -14,7 +14,7 @@ This increment adds the public listings catalog on top of I04 review and publica
 
 ## Public catalog (I05)
 
-`GET /public/listings` returns a paginated catalog with optional filters: `location`, `minPricePerNight`, `maxPricePerNight`, and `maxGuests`. Pagination uses `page` (1–10,000, default 1) and `pageSize` (1–50, default 20), with deterministic ordering and total counts.
+`GET /public/listings` returns a paginated medium/long-rental catalog with optional filters: `location`, `minPriceAmount`, `maxPriceAmount`, `pricePeriod`, `rentalDuration`, `currency`, and `maxOccupants`. Pagination uses `page` (1–10,000, default 1) and `pageSize` (1–50, default 20), with deterministic ordering and total counts. Legacy rows whose domain fields are still missing are returned with `domainDataStatus: "MISSING"`; their historical values are never converted.
 
 `GET /public/listings/:id` returns the public listing ficha, including its public fields and ordered image metadata. Internal ownership, workflow, publication, and storage fields are not exposed. A listing that is not both `APPROVED` and `PUBLISHED` is treated as unavailable.
 

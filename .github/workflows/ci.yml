@@ -42,6 +42,9 @@ jobs:
       - run: pnpm migration:evidence
         env:
           I11_PSQL_BIN: psql
+      - run: pnpm i13:migration:evidence
+        env:
+          I13_PSQL_BIN: psql
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
