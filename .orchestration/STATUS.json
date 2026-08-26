@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "project": "Alquileres Uspallata",
+  "phase": "PRODUCT_ACCEPTANCE",
+  "runtime_status": "PRODUCT_ACCEPTANCE_READY",
+  "resume_authorized": false,
+  "active_task": "I13",
+  "last_completed_task": "I13_TECHNICAL_CANDIDATE",
+  "last_completed_head": "8e11bebdb197321d500678f06233d6f174f03438",
+  "work_branch": null,
+  "next_action": "HUMAN_PRODUCT_ACCEPTANCE_I13",
+  "stop_reason": "I13 technical candidate awaits explicit Human Product Acceptance",
+  "event": {
+    "seq": 1,
+    "id": "I13@PRODUCT-ACCEPTANCE-READY",
+    "type": "PRODUCT_ACCEPTANCE_READY"
+  },
+  "external_review": {
+    "required": false,
+    "last_audited_head": null,
+    "last_verdict": null,
+    "artifact_head": null,
+    "pending_verdict": null
+  },
+  "human_gate": {
+    "type": "HUMAN_PRODUCT_ACCEPTANCE",
+    "task": "I13",
+    "reason": "Technical/integration/browser evidence is complete; explicit Human Product Acceptance remains pending"
+  },
+  "blocker": null
+}
