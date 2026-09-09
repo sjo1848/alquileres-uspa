@@ -12,11 +12,11 @@ No customer, owner, property, contact, or other real personal data is used. The 
 
 Successful runs version these files under `docs/media/portfolio/`:
 
-- `catalog-desktop-1440x1200.png` — public search/catalog at desktop viewport.
+- `catalog-results-desktop-1440x1200.png` — public catalog scrolled to the real results grid at desktop viewport.
 - `listing-detail-desktop-1440x1200.png` — public listing detail for `portfolio-demo-casa-montana`.
-- `catalog-mobile-390x844.png` — public search/catalog at mobile viewport.
+- `catalog-results-mobile-390x844.png` — public catalog scrolled to the real results grid at mobile viewport.
 
-The capture script validates PNG signature, exact viewport dimensions, and a minimum byte size before evidence can be committed.
+The capture script uses Chrome DevTools Protocol to wait for Vue and listing images to finish loading before focusing the results grid. It validates PNG signature, exact viewport dimensions, and a minimum byte size before evidence can be committed.
 
 ## Reproduction contract
 
