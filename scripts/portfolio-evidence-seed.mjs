@@ -108,10 +108,8 @@ function createDemoPng(width, height, palette) {
         nx >= 0.265 && nx <= 0.315 && ny >= 0.65 && ny <= houseBottom;
       if (door) [r, g, b] = palette.door;
 
-      const windowA =
-        nx >= 0.19 && nx <= 0.245 && ny >= 0.61 && ny <= 0.665;
-      const windowB =
-        nx >= 0.335 && nx <= 0.375 && ny >= 0.61 && ny <= 0.665;
+      const windowA = nx >= 0.19 && nx <= 0.245 && ny >= 0.61 && ny <= 0.665;
+      const windowB = nx >= 0.335 && nx <= 0.375 && ny >= 0.61 && ny <= 0.665;
       if (windowA || windowB) [r, g, b] = palette.window;
 
       const pathCenter = 0.29 + (ny - 0.76) * 0.3;
