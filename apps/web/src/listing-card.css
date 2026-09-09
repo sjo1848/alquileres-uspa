@@ -1,0 +1,14 @@
+.listing-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 0.6rem;
+  background: #dcecf3;
+}
+
+.listing-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
