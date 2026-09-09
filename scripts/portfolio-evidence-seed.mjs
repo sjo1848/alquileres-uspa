@@ -87,7 +87,12 @@ function createDemoPng(width, height, palette) {
 
       const roofLeft = houseLeft - 0.025;
       const roofY = roofTop + Math.abs(nx - roofPeakX) * roofSlope;
-      if (nx >= roofLeft && nx <= roofRight() && ny >= roofY && ny <= houseTop) {
+      if (
+        nx >= roofLeft &&
+        nx <= roofRight() &&
+        ny >= roofY &&
+        ny <= houseTop
+      ) {
         [r, g, b] = palette.roof;
       }
       if (
@@ -103,10 +108,8 @@ function createDemoPng(width, height, palette) {
         nx >= 0.265 && nx <= 0.315 && ny >= 0.65 && ny <= houseBottom;
       if (door) [r, g, b] = palette.door;
 
-      const windowA =
-        nx >= 0.19 && nx <= 0.245 && ny >= 0.61 && ny <= 0.665;
-      const windowB =
-        nx >= 0.335 && nx <= 0.375 && ny >= 0.61 && ny <= 0.665;
+      const windowA = nx >= 0.19 && nx <= 0.245 && ny >= 0.61 && ny <= 0.665;
+      const windowB = nx >= 0.335 && nx <= 0.375 && ny >= 0.61 && ny <= 0.665;
       if (windowA || windowB) [r, g, b] = palette.window;
 
       const pathCenter = 0.29 + (ny - 0.76) * 0.3;
