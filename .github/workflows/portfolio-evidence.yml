@@ -65,6 +65,9 @@ jobs:
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Canonicalize evidence scripts
+        run: pnpm exec prettier --write scripts/portfolio-evidence-seed.mjs scripts/portfolio-evidence-capture.mjs
+
       - name: Prepare database
         run: |
           pnpm prisma:generate
@@ -125,9 +128,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/media/portfolio/
+          git add -A scripts/portfolio-evidence-seed.mjs scripts/portfolio-evidence-capture.mjs docs/media/portfolio/
           if git diff --cached --quiet; then
-            echo "Evidence already matches the current runtime."
+            echo "Evidence and evidence scripts already match the validated runtime."
             exit 0
           fi
           git commit -m "docs: refresh portfolio runtime evidence"
