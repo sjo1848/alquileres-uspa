@@ -60,7 +60,7 @@ async function findChrome() {
 
 async function waitForDebugger() {
   const endpoint = `http://127.0.0.1:${debuggingPort}/json/version`;
-  for (let attempt = 0; attempt < 80; attempt += 1) {
+  for (let attempt = 0; attempt < 300; attempt += 1) {
     try {
       const response = await fetch(endpoint);
       if (response.ok) {
