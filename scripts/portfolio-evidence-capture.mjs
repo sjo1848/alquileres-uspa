@@ -178,6 +178,7 @@ async function validateScreenshot(file, expectedWidth, expectedHeight) {
 }
 
 const chrome = await findChrome();
+await rm(outputDir, { recursive: true, force: true });
 await mkdir(outputDir, { recursive: true });
 await rm(browserProfile, { recursive: true, force: true });
 
