@@ -1,0 +1,131 @@
+name: Portfolio evidence
+
+on:
+  push:
+    branches:
+      - feature/portfolio-evidence
+    paths:
+      - '.github/workflows/portfolio-evidence.yml'
+      - 'scripts/portfolio-evidence-seed.mjs'
+      - 'scripts/portfolio-evidence-capture.mjs'
+      - 'docs/portfolio-evidence.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: portfolio-evidence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: alquileres
+          POSTGRES_USER: alquileres
+          POSTGRES_PASSWORD: alquileres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U alquileres -d alquileres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://alquileres:alquileres@localhost:5432/alquileres?schema=public
+      JWT_SECRET: portfolio-evidence-only-secret
+      JWT_EXPIRES_IN: 15m
+      CORS_ORIGINS: http://127.0.0.1:5173,http://localhost:5173
+      LISTING_IMAGE_STORAGE_DIR: ${{ github.workspace }}/.data/listing-images
+      PORTFOLIO_EVIDENCE_BASE_URL: http://127.0.0.1:5173
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.15.1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare database
+        run: |
+          pnpm prisma:generate
+          pnpm --filter @alquileres/api prisma:deploy
+
+      - name: Seed synthetic portfolio dataset
+        run: node scripts/portfolio-evidence-seed.mjs
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Start API and web runtime
+        run: |
+          pnpm --filter @alquileres/api dev > /tmp/alquileres-api.log 2>&1 &
+          echo $! > /tmp/alquileres-api.pid
+          pnpm --filter @alquileres/web exec vite --host 127.0.0.1 --port 5173 > /tmp/alquileres-web.log 2>&1 &
+          echo $! > /tmp/alquileres-web.pid
+
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:3000/health > /dev/null; then
+              break
+            fi
+            if [ "$attempt" = "60" ]; then
+              cat /tmp/alquileres-api.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:5173/ > /dev/null; then
+              exit 0
+            fi
+            if [ "$attempt" = "60" ]; then
+              cat /tmp/alquileres-web.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+      - name: Confirm browser
+        run: google-chrome --version
+
+      - name: Capture and validate evidence
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/portfolio-evidence-capture.mjs
+
+      - name: Upload evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: alquileres-uspa-portfolio-evidence-${{ github.sha }}
+          path: docs/media/portfolio/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Version validated evidence
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/media/portfolio/
+          if git diff --cached --quiet; then
+            echo "Evidence already matches the current runtime."
+            exit 0
+          fi
+          git commit -m "docs: refresh portfolio runtime evidence"
+          git push origin HEAD:${{ github.ref_name }}
