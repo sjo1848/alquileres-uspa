@@ -76,6 +76,23 @@ async function waitForDebugger() {
   throw new Error('Chrome DevTools endpoint did not become ready.');
 }
 
+async function stopChrome(process) {
+  if (process.exitCode === null) {
+    process.kill('SIGTERM');
+    await Promise.race([
+      new Promise((resolvePromise) => process.once('exit', resolvePromise)),
+      new Promise((resolvePromise) => setTimeout(resolvePromise, 3_000)),
+    ]);
+  }
+
+  await rm(browserProfile, {
+    recursive: true,
+    force: true,
+    maxRetries: 5,
+    retryDelay: 200,
+  });
+}
+
 class CdpClient {
   constructor(url) {
     this.socket = new WebSocket(url);
@@ -253,8 +270,7 @@ try {
     client.close();
   }
 } finally {
-  chromeProcess.kill('SIGTERM');
-  await rm(browserProfile, { recursive: true, force: true });
+  await stopChrome(chromeProcess);
 }
 
 console.log(
