@@ -1,9 +1,9 @@
 # Issue #24 — Recruiter demo discovery and design
 
-**Phase:** DISCOVERY → DEFINITION → DESIGN  
-**Build authorization:** Not granted by this report or Issue #24  
-**Repository/base:** `sjo1848/alquileres-uspa`, `main` at `5bcde39e0ca8abd2d5d2e0a9e9c90c5b3bf47a51`  
-**Candidate:** Option A — static, read-only demo using the real Vue public presentation and a bounded deterministic fixture source  
+**Phase:** DISCOVERY → DEFINITION → DESIGN
+**Build authorization:** Not granted by this report or Issue #24
+**Repository/base:** `sjo1848/alquileres-uspa`, `main` at `5bcde39e0ca8abd2d5d2e0a9e9c90c5b3bf47a51`
+**Candidate:** Option A — static, read-only demo using the real Vue public presentation and a bounded deterministic fixture source
 **Recommendation status:** Ready for Controller decision; BUILD remains stopped
 
 ## 1. Executive summary
